@@ -1,18 +1,33 @@
+<a id="top"></a>
+
 <div align="center">
 
-# inventoryquality
+<img src="https://capsule-render.vercel.app/api?type=wave&color=0:1e2a4a,55:2f3f6b,100:3b5998&height=230&section=header&text=inventoryquality&fontSize=54&fontColor=ffffff&fontAlignY=26&desc=GLPI%2011%20%C2%B7%20Envanter%20Veri%20Kalitesi%20ve%20D%C3%BCzeltme%20Takibi&descAlignY=45&descSize=17&animation=fadeIn" width="100%" alt="inventoryquality — GLPI 11 Envanter Veri Kalitesi ve Düzeltme Takibi">
 
-### GLPI 11 için Envanter Veri Kalitesi ve Düzeltme Takibi
+<img src="https://readme-typing-svg.demolab.com?font=Inter&weight=600&size=19&duration=3000&pause=1100&color=F7B500&center=true&vCenter=true&width=620&height=34&lines=Kural+%E2%86%92+Bulgu+%E2%86%92+D%C3%BCzeltme+%E2%86%92+Do%C4%9Frulama;Bulgu+yaln%C4%B1z+do%C4%9Frulan%C4%B1nca+kapan%C4%B1r;8+kural+%C5%9Fablonu+%C2%B7+onay+ak%C4%B1%C5%9F%C4%B1+%C2%B7+185+test" alt="Kural → Bulgu → Düzeltme → Doğrulama">
 
 **Envanterimizde hangi bilgiler güvenilir, hangileri düzeltilmeli — ve bu düzeltmeler gerçekten tamamlandı mı?**
 
 [![GLPI](https://img.shields.io/badge/GLPI-11.0.x-2f3f6b?style=for-the-badge)](https://glpi-project.org)
 [![PHP](https://img.shields.io/badge/PHP-8.2%2B-777bb4?style=for-the-badge&logo=php&logoColor=white)](https://www.php.net)
-[![Sürüm](https://img.shields.io/badge/s%C3%BCr%C3%BCm-0.2.1-f7b500?style=for-the-badge)](CHANGELOG.md)
-[![Testler](https://img.shields.io/badge/testler-185%2F185-2ea44f?style=for-the-badge)](TEST-RAPORU.md)
-[![Lisans](https://img.shields.io/badge/lisans-GPLv3%2B-blue?style=for-the-badge)](LICENSE)
+[![Sürüm](https://img.shields.io/badge/S%C3%9CR%C3%9CM-0.2.1-f7b500?style=for-the-badge)](CHANGELOG.md)
+[![Testler](https://img.shields.io/badge/TESTLER-185%2F185-2ea44f?style=for-the-badge)](TEST-RAPORU.md)
+[![Lisans](https://img.shields.io/badge/L%C4%B0SANS-GPLv3%2B-blue?style=for-the-badge)](LICENSE)
+[![Görüntülenme](https://api.visitorbadge.io/api/visitors?path=CodeByPinar%2Finventoryquality&label=G%C3%96R%C3%9CNT%C3%9CLENME&labelColor=%232f3f6b&countColor=%23f7b500&style=for-the-badge)](https://visitorbadge.io/status?path=CodeByPinar%2Finventoryquality)
 
-[Özellikler](#-özellikler) · [Ekranlar](#-ekranlar) · [Nasıl çalışır](#-nasıl-çalışır) · [Kurulum](#-kurulum) · [Kurallar](#-kurallar) · [Düzeltme ve onay](#-düzeltme-ve-onay) · [Testler](#-testler)
+<br>
+
+<table>
+<tr>
+<td align="center" width="14%"><a href="#-özellikler"><img src="https://api.iconify.design/tabler/sparkles.svg?color=%236366f1" width="34" height="34" alt=""><br><sub><b>Özellikler</b></sub></a></td>
+<td align="center" width="14%"><a href="#-ekranlar"><img src="https://api.iconify.design/tabler/layout-dashboard.svg?color=%238b5cf6" width="34" height="34" alt=""><br><sub><b>Ekranlar</b></sub></a></td>
+<td align="center" width="14%"><a href="#-nasıl-çalışır"><img src="https://api.iconify.design/tabler/route.svg?color=%230ea5e9" width="34" height="34" alt=""><br><sub><b>Nasıl çalışır</b></sub></a></td>
+<td align="center" width="14%"><a href="#-kurulum"><img src="https://api.iconify.design/tabler/rocket.svg?color=%2314b8a6" width="34" height="34" alt=""><br><sub><b>Kurulum</b></sub></a></td>
+<td align="center" width="14%"><a href="#-kurallar"><img src="https://api.iconify.design/tabler/list-check.svg?color=%2322c55e" width="34" height="34" alt=""><br><sub><b>Kurallar</b></sub></a></td>
+<td align="center" width="14%"><a href="#-düzeltme-ve-onay"><img src="https://api.iconify.design/tabler/pencil-check.svg?color=%23f59e0b" width="34" height="34" alt=""><br><sub><b>Düzeltme ve onay</b></sub></a></td>
+<td align="center" width="14%"><a href="#-testler"><img src="https://api.iconify.design/tabler/test-pipe.svg?color=%23f97316" width="34" height="34" alt=""><br><sub><b>Testler</b></sub></a></td>
+</tr>
+</table>
 
 <br>
 
@@ -37,19 +52,19 @@ atar**, gerekirse tek bir **düzeltme destek kaydında** toplar, düzeltmeyi kur
 <tr>
 <td width="33%" valign="top">
 
-**🔍 Ölçer**<br>
+<img src="https://api.iconify.design/tabler/zoom-check.svg?color=%236366f1" width="26" height="26" align="left" alt="">&nbsp;**Ölçer**<br>
 8 hazır kural şablonu, yan etkisiz önizleme, partili ve devam ettirilebilir tarama, açıklanabilir puan + kapsam.
 
 </td>
 <td width="33%" valign="top">
 
-**🧭 Yönlendirir**<br>
+<img src="https://api.iconify.design/tabler/arrows-split-2.svg?color=%230ea5e9" width="26" height="26" align="left" alt="">&nbsp;**Yönlendirir**<br>
 Tekilleştirilmiş bulgular, otomatik sorumlu atama, varlık + sorumlu başına tek düzeltme destek kaydı.
 
 </td>
 <td width="33%" valign="top">
 
-**✅ Doğrular**<br>
+<img src="https://api.iconify.design/tabler/circle-check.svg?color=%2322c55e" width="26" height="26" align="left" alt="">&nbsp;**Doğrular**<br>
 Kurala bağlı onay, anlık görüntü ve çakışma kontrolü, atomik yazım, her düzeltmeden sonra yeniden kontrol.
 
 </td>
@@ -75,9 +90,11 @@ Kurala bağlı onay, anlık görüntü ve çakışma kontrolü, atomik yazım, h
 | 📊 **Puan ve kapsam** | Ağırlıklı kalite puanı ile değerlendirme kapsamı birlikte; düşük kapsamda "sağlıklı" denmez. |
 | 🔐 **Güvenlik** | 10 ayrı yetki, kurum birimi yalıtımı, CSRF, güvenli CSV, denetim izi (kullanıcı ve servis kimliği ayrı). |
 
+<p align="right"><a href="#top"><sub>↑ başa dön</sub></a></p>
+
 ---
 
-## 🖼️ Ekranlar
+## 📸 Ekranlar
 
 <table>
 <tr>
@@ -126,6 +143,8 @@ Kurala bağlı onay, anlık görüntü ve çakışma kontrolü, atomik yazım, h
 
 <sub>Ekranlar, eklentinin gerçek bir GLPI 11.0.8 kurulumunda "IQ-DEMO" önekli demo verisiyle çekilmiştir.</sub>
 
+<p align="right"><a href="#top"><sub>↑ başa dön</sub></a></p>
+
 ---
 
 ## 🔄 Nasıl çalışır
@@ -152,6 +171,8 @@ flowchart LR
 açılır ve aynı varlık + aynı sorumlu grup için **tek** düzeltme destek kaydında toplanır. Teknisyen konumu GLPI ekranından
 girer; kayıt kendiliğinden yeniden kontrol edilir ve konum bulgusu çözülür. Kullanıcı değişikliği onay gerektiriyorsa
 eklentiden önerilir, onaylanınca uygulanır ve yeniden kontrol edilir. İki bulgu da çözülünce destek kaydına çözüm eklenir.
+
+<p align="right"><a href="#top"><sub>↑ başa dön</sub></a></p>
 
 ---
 
@@ -209,6 +230,8 @@ Menü: **Araçlar → Envanter Veri Kalitesi** (menünün görünmesi için otur
 3. **İşler → Tam tarama başlat.** Sonuçlar **Genel Bakış** ve **Bulgular** ekranlarında.
 4. Hacim makulse birimde destek kaydı modunu **Aç** yapın; düzeltme gerektiren kurallara onay politikası tanımlayın.
 
+<p align="right"><a href="#top"><sub>↑ başa dön</sub></a></p>
+
 ---
 
 ## 📏 Kurallar
@@ -243,6 +266,8 @@ Her kuralın **kararlı kodu**, kapsamı (kurum birimi + alt birimler, varlık t
   mevcut / aktif.
 
 </details>
+
+<p align="right"><a href="#top"><sub>↑ başa dön</sub></a></p>
 
 ---
 
@@ -279,9 +304,11 @@ stateDiagram-v2
 Kararlı anahtar: **kurum birimi + varlık tipi + varlık + kural + hedef alan**. Aynı anahtarda tek güncel bulgu bulunur;
 benzersizlik kısıtı eşzamanlı işçilerde bile aynı bulguyu korur. İlk / son görülme, tekrar sayısı ve her dönem saklanır.
 
+<p align="right"><a href="#top"><sub>↑ başa dön</sub></a></p>
+
 ---
 
-## ✍️ Düzeltme ve onay
+## 📝 Düzeltme ve onay
 
 **Üç yol:** GLPI ekranından düzeltme (olay kuyruğu yeniden kontrol eder) · eklenti içinden yetkili düzeltme (onaysız
 politikada) · onaylı düzeltme (onaylar tamamlanmadan envantere yazılmaz).
@@ -307,6 +334,8 @@ claimOnce → reloadAssetAndPolicy → checkEntityRightsAndRequiredApprovals
 - GLPI nesne güncellemesi, GLPI tarihçesi ve denetim kaydı **tek işlemde**; bir adım başarısızsa hepsi geri alınır.
 - Ret durumunda (gerekçe zorunlu) envanter değişmez, bulgu açık kalır. Onaylayan bulunamaz ya da pasifleşirse iş
   **İnceleme gerekli**ye düşer; onay otomatik verilmez.
+
+<p align="right"><a href="#top"><sub>↑ başa dön</sub></a></p>
 
 ---
 
@@ -339,6 +368,8 @@ Ağırlıklarla. Örnek 7 / 3 / 2 → **%70** puan, **%83,3** kapsam.
 </tr>
 </table>
 
+<p align="right"><a href="#top"><sub>↑ başa dön</sub></a></p>
+
 ---
 
 ## 🔐 Yetkiler
@@ -354,6 +385,8 @@ arama, dışa aktarma ve ek indirme **kurum birimi** kısıtından geçer.
 | İş ata | Elle atama, onaylayanı yeniden atama | | Rapor dışa aktar | Güvenli CSV |
 | Düzeltme öner | Eklenti içinden öneri | | Ayar yönet | Ayarlar ekranı |
 
+<p align="right"><a href="#top"><sub>↑ başa dön</sub></a></p>
+
 ---
 
 ## ⏱️ Otomatik görevler
@@ -367,6 +400,8 @@ arama, dışa aktarma ve ek indirme **kurum birimi** kısıtından geçer.
 Tarama 200 kayıtlık partiler ve zaman bütçesiyle çalışır, kaldığı yeri saklar; yarıda kalan tarama "Kısmi" görünür ve
 değerlendirilmeyen bulgular topluca kapatılmaz.
 
+<p align="right"><a href="#top"><sub>↑ başa dön</sub></a></p>
+
 ---
 
 ## 🛡️ Güvenlik
@@ -376,6 +411,8 @@ değerlendirilmeyen bulgular topluca kapatılmaz.
 - CSV'de `=`, `+`, `-`, `@` ile başlayan hücreler formül olarak yorumlanmasın diye korunur.
 - Kanıt dosyaları rastgele adla saklanır; tür içerikten belirlenir; yalnız yetkili ve birim erişimi olana sunulur.
 - Sistem işlemleri servis kimliğiyle (`cron:iqscan`, `service:correction` …) kaydedilir; talep eden ve onaylayan ayrıdır.
+
+<p align="right"><a href="#top"><sub>↑ başa dön</sub></a></p>
 
 ---
 
@@ -423,6 +460,8 @@ tests/                         Davranış testleri (pakete dahil değil)
 
 </details>
 
+<p align="right"><a href="#top"><sub>↑ başa dön</sub></a></p>
+
 ---
 
 ## 🧪 Testler
@@ -442,6 +481,8 @@ Ayrıntı: [`tests/README.md`](tests/README.md) · sonuçlar: [`TEST-RAPORU.md`]
 > [!CAUTION]
 > Test betikleri veri oluşturur ve siler. **Gerçek veri içeren bir GLPI'de çalıştırmayın.**
 
+<p align="right"><a href="#top"><sub>↑ başa dön</sub></a></p>
+
 ---
 
 ## 🗺️ Yol haritası
@@ -453,6 +494,8 @@ Ayrıntı: [`tests/README.md`](tests/README.md) · sonuçlar: [`TEST-RAPORU.md`]
 - [ ] Fields eklentisi ve GLPI 11 özel varlık adaptörleri
 - [ ] Native Forms ile düzeltme önerisi
 - [ ] Gerçek oturumlu tarayıcı test paketi
+
+<p align="right"><a href="#top"><sub>↑ başa dön</sub></a></p>
 
 ---
 
@@ -489,6 +532,8 @@ Kurulum şablon önbelleğini temizler; yine de görünüyorsa <code>php bin/con
 Görevler harici moddadır; sunucuda GLPI cron satırının olduğundan emin olun (<b>Kurulum → Otomatik İşlemler</b>).
 </details>
 
+<p align="right"><a href="#top"><sub>↑ başa dön</sub></a></p>
+
 ---
 
 <div align="center">
@@ -496,5 +541,7 @@ Görevler harici moddadır; sunucuda GLPI cron satırının olduğundan emin olu
 **inventoryquality** · Pınar Topuz · [GPLv3+](LICENSE)
 
 <sub>Değişiklikler: <a href="CHANGELOG.md">CHANGELOG.md</a> · Test raporu: <a href="TEST-RAPORU.md">TEST-RAPORU.md</a></sub>
+
+<img src="https://capsule-render.vercel.app/api?type=wave&color=0:3b5998,45:2f3f6b,100:1e2a4a&height=110&section=footer" width="100%" alt="">
 
 </div>
