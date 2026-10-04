@@ -1,438 +1,500 @@
-# inventoryquality — Envanter Veri Kalitesi ve Düzeltme Takibi (GLPI 11)
+<div align="center">
 
-> **Envanterimizde hangi bilgiler güvenilir, hangileri düzeltilmeli ve bu düzeltmeler gerçekten tamamlandı mı?**
+# inventoryquality
 
-`inventoryquality`, GLPI 11 envanter kayıtlarını kurumun tanımladığı **kalite kurallarına** göre kontrol eden bağımsız
-bir eklentidir. Eksik, çelişkili ya da doğrulama süresi geçmiş bilgi için izlenebilir bir **bulgu** açar, düzeltme
-işini **sorumluya atar**, gerekirse tek bir **düzeltme destek kaydında** toplar, düzeltmeyi kurala bağlı **onay**
-akışından geçirir ve bulguyu **yalnız güncel veride kural yeniden sağlandığında** çözer.
+### GLPI 11 için Envanter Veri Kalitesi ve Düzeltme Takibi
+
+**Envanterimizde hangi bilgiler güvenilir, hangileri düzeltilmeli — ve bu düzeltmeler gerçekten tamamlandı mı?**
+
+[![GLPI](https://img.shields.io/badge/GLPI-11.0.x-2f3f6b?style=for-the-badge)](https://glpi-project.org)
+[![PHP](https://img.shields.io/badge/PHP-8.2%2B-777bb4?style=for-the-badge&logo=php&logoColor=white)](https://www.php.net)
+[![Sürüm](https://img.shields.io/badge/s%C3%BCr%C3%BCm-0.2.1-f7b500?style=for-the-badge)](CHANGELOG.md)
+[![Testler](https://img.shields.io/badge/testler-185%2F185-2ea44f?style=for-the-badge)](TEST-RAPORU.md)
+[![Lisans](https://img.shields.io/badge/lisans-GPLv3%2B-blue?style=for-the-badge)](LICENSE)
+
+[Özellikler](#-özellikler) · [Ekranlar](#-ekranlar) · [Nasıl çalışır](#-nasıl-çalışır) · [Kurulum](#-kurulum) · [Kurallar](#-kurallar) · [Düzeltme ve onay](#-düzeltme-ve-onay) · [Testler](#-testler)
+
+<br>
+
+<a href="docs/screenshots/01_genel_bakis.png"><img src="docs/screenshots/01_genel_bakis.png" alt="Genel Bakış" width="92%"></a>
+
+<sub>Genel Bakış — kalite puanı, değerlendirme kapsamı, kural bazında sonuçlar, düzeltme / istisna göstergeleri ve tarama sağlığı</sub>
+
+</div>
+
+<br>
+
+`inventoryquality`, GLPI 11 envanter kayıtlarını kurumun tanımladığı **kalite kurallarına** göre kontrol eden bağımsız bir
+eklentidir. Eksik, çelişkili ya da doğrulama süresi geçmiş bilgi için izlenebilir bir **bulgu** açar, işi **sorumluya
+atar**, gerekirse tek bir **düzeltme destek kaydında** toplar, düzeltmeyi kurala bağlı **onaydan** geçirir ve bulguyu
+**yalnız güncel veride kural yeniden sağlandığında** çözer.
+
+> [!IMPORTANT]
+> **Kapanış ilkesi.** "Düzelttim" beyanı, onay verilmesi ya da destek kaydının elle kapatılması bulguyu **tek başına
+> çözmez**. Çözüm, güncel verinin ilgili kuralı sağladığını gösteren başarılı bir kontrole dayanır.
+
+<table>
+<tr>
+<td width="33%" valign="top">
+
+**🔍 Ölçer**<br>
+8 hazır kural şablonu, yan etkisiz önizleme, partili ve devam ettirilebilir tarama, açıklanabilir puan + kapsam.
+
+</td>
+<td width="33%" valign="top">
+
+**🧭 Yönlendirir**<br>
+Tekilleştirilmiş bulgular, otomatik sorumlu atama, varlık + sorumlu başına tek düzeltme destek kaydı.
+
+</td>
+<td width="33%" valign="top">
+
+**✅ Doğrular**<br>
+Kurala bağlı onay, anlık görüntü ve çakışma kontrolü, atomik yazım, her düzeltmeden sonra yeniden kontrol.
+
+</td>
+</tr>
+</table>
+
+---
+
+## ✨ Özellikler
 
 | | |
 | --- | --- |
-| **Sürüm** | 0.2.0 |
-| **GLPI** | 11.0.x (11.0.8 üzerinde test edildi) |
-| **PHP** | 8.2+ (8.3.6 üzerinde test edildi) |
-| **Veritabanı** | MySQL / MariaDB, InnoDB, utf8mb4 (MariaDB 10.11.14 üzerinde test edildi) |
-| **Lisans** | GPLv3+ |
-| **Yazar** | Pınar Topuz |
-| **Bağımlılık** | Yok (Fields eklentisi gerekmez) |
+| 📏 **Kurallar** | DQ-01 … DQ-08: zorunlu alan, sorumlu, pasif kullanıcı, değer kümesi, koşullu zorunluluk, referans bütünlüğü, güncellik, iş sahibi teyidi. Serbest SQL / PHP / düzenli ifade yok. |
+| 🧪 **Önizleme ve sürüm** | Kural yayına alınmadan örnek kayıtlardaki etkisi görülür; her yayın yeni sürümdür, kim ne zaman değiştirdi saklanır. |
+| 🗂️ **Kararlı katalog** | Alanlar kararlı anahtarlarla tutulur; alan kaybolur ya da tipi değişirse kural kendiliğinden **askıya** alınır. |
+| ⚡ **Olay + tarama** | Kayıt kaydedilince yalnız o kayıt yeniden kontrol edilir; gece tam taraması kaçırılan olayları yakalar. |
+| 🧷 **Bulgular** | Aynı sorun tekrar tekrar açılmaz; tekrar eden sorun yeni dönem olur, geçmiş korunur. |
+| 👥 **Atama** | Kural → varlığın teknik grubu / sorumlusu → birimin veri kalitesi grubu → "Atama bekliyor". Pasif kişiye iş gitmez. |
+| 🎫 **Destek kaydı** | Varlık + sorumlu başına tek kayıt; takip notları; yalnız doğrulanmış çözüm; erken kapanırsa yeni takip kaydı. |
+| ✍️ **Düzeltme + onay** | Eklenti içinden öneri, tek / iki sıralı onay, "biri yeterli" / "herkes", kanıt eki, çakışma kontrolü, atomik yazım. |
+| ⏸️ **İstisnalar** | Gerekçe, onaylayan, bitiş, telafi edici işlem; süre dolunca otomatik yeniden kontrol. Puanı değiştirmez. |
+| 🙋 **İş sahibi teyidi** | Kim, hangi alanları, hangi değerlerle, ne zaman teyit etti — otomatik envanterden ayrı. |
+| 📊 **Puan ve kapsam** | Ağırlıklı kalite puanı ile değerlendirme kapsamı birlikte; düşük kapsamda "sağlıklı" denmez. |
+| 🔐 **Güvenlik** | 10 ayrı yetki, kurum birimi yalıtımı, CSRF, güvenli CSV, denetim izi (kullanıcı ve servis kimliği ayrı). |
 
 ---
 
-## İçindekiler
+## 🖼️ Ekranlar
 
-1. [Temel ilke](#temel-ilke)
-2. [Özellikler](#özellikler)
-3. [Nasıl çalışır](#nasıl-çalışır)
-4. [Kurulum](#kurulum)
-5. [Güncelleme ve kaldırma](#güncelleme-ve-kaldırma)
-6. [İlk kullanım — önerilen pilot](#ilk-kullanım--önerilen-pilot)
-7. [Kurallar (DQ-01 … DQ-08)](#kurallar-dq-01--dq-08)
-8. [Bulgular ve yaşam döngüsü](#bulgular-ve-yaşam-döngüsü)
-9. [Sorumlu atama](#sorumlu-atama)
-10. [Destek kaydı entegrasyonu](#destek-kaydı-entegrasyonu)
-11. [Düzeltme ve onay akışı](#düzeltme-ve-onay-akışı)
-12. [İstisnalar](#istisnalar)
-13. [İş sahibi teyidi](#iş-sahibi-teyidi)
-14. [Kalite puanı ve kapsam](#kalite-puanı-ve-kapsam)
-15. [Ekranlar](#ekranlar)
-16. [Yetkiler](#yetkiler)
-17. [Otomatik görevler](#otomatik-görevler)
-18. [Ayarlar](#ayarlar)
-19. [Güvenlik](#güvenlik)
-20. [Veri modeli](#veri-modeli)
-21. [Mimari](#mimari)
-22. [Testler](#testler)
-23. [Bilinen sınırlar ve yol haritası](#bilinen-sınırlar-ve-yol-haritası)
-24. [Sık sorulanlar](#sık-sorulanlar)
+<table>
+<tr>
+<td width="50%" valign="top">
+<a href="docs/screenshots/02_bulgular.png"><img src="docs/screenshots/02_bulgular.png" alt="Bulgular"></a>
+<p align="center"><b>Bulgular</b><br><sub>GLPI arama motoruyla: varlık, kural, durum, önem, sorumlu, hedef tarih</sub></p>
+</td>
+<td width="50%" valign="top">
+<a href="docs/screenshots/03_bulgu_pasif_kullanici.png"><img src="docs/screenshots/03_bulgu_pasif_kullanici.png" alt="Bulgu detayı"></a>
+<p align="center"><b>Bulgu detayı</b><br><sub>Beklenen / mevcut durum, dönemler, destek kaydı, öneri ve istisna formları</sub></p>
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
+<a href="docs/screenshots/07_duzeltme_detay.png"><img src="docs/screenshots/07_duzeltme_detay.png" alt="Düzeltme detayı"></a>
+<p align="center"><b>Düzeltme / onay</b><br><sub>Önceki → yeni değer, anlık görüntü, onay adımları, yeniden atama</sub></p>
+</td>
+<td width="50%" valign="top">
+<a href="docs/screenshots/10_kural_formu.png"><img src="docs/screenshots/10_kural_formu.png" alt="Kural formu"></a>
+<p align="center"><b>Kural tanımı</b><br><sub>Hedef alan, durum kapsamı, önem, ağırlık, sorumlu, onay politikası, sürümler</sub></p>
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
+<a href="docs/screenshots/13_varlik_sekmesi.png"><img src="docs/screenshots/13_varlik_sekmesi.png" alt="Varlık sekmesi"></a>
+<p align="center"><b>Varlık → Veri Kalitesi</b><br><sub>Varlığın bulguları, iş sahibi teyidi, uygulanan kurallar</sub></p>
+</td>
+<td width="50%" valign="top">
+<a href="docs/screenshots/05_bulgu_istisna.png"><img src="docs/screenshots/05_bulgu_istisna.png" alt="İstisnalı bulgu"></a>
+<p align="center"><b>İstisnalı bulgu</b><br><sub>Süreli istisna: gerekçe, onaylayan, bitiş, telafi edici işlem</sub></p>
+</td>
+</tr>
+</table>
+
+<details>
+<summary><b>Diğer ekranlar</b> (Düzeltmeler, İstisnalar, Kurallar, İşler, Ayarlar, öneri bekleyen bulgu)</summary>
+<br>
+
+| | |
+| --- | --- |
+| <img src="docs/screenshots/06_duzeltmeler.png" alt="Düzeltmeler"><p align="center"><sub>Düzeltmeler — onayımı bekleyenler · taleplerim · tümü</sub></p> | <img src="docs/screenshots/08_istisnalar.png" alt="İstisnalar"><p align="center"><sub>İstisnalar — geçerli / süresi dolan / geri alınan</sub></p> |
+| <img src="docs/screenshots/09_kurallar.png" alt="Kurallar"><p align="center"><sub>Kurallar — kod, şablon, varlık tipi, durum</sub></p> | <img src="docs/screenshots/11_isler.png" alt="İşler"><p align="center"><sub>İşler — taramalar, kuyruk, otomatik görevler</sub></p> |
+| <img src="docs/screenshots/12_ayarlar.png" alt="Ayarlar"><p align="center"><sub>Ayarlar — birim ayarları, genel ayarlar, alan kataloğu</sub></p> | <img src="docs/screenshots/04_bulgu_duzeltme_onerisi.png" alt="Öneri bekleyen bulgu"><p align="center"><sub>Öneri bekleyen bulgu — onaylayan bulunamadı, İnceleme gerekli</sub></p> |
+
+</details>
+
+<sub>Ekranlar, eklentinin gerçek bir GLPI 11.0.8 kurulumunda "IQ-DEMO" önekli demo verisiyle çekilmiştir.</sub>
 
 ---
 
-## Temel ilke
+## 🔄 Nasıl çalışır
 
-- **Kapanış ilkesi.** Kullanıcının "düzelttim" beyanı, onay verilmesi ya da destek kaydının elle kapatılması
-  bulguyu **tek başına çözmez**. Çözüm, güncel verinin ilgili kuralı sağladığını gösteren başarılı bir kontrole dayanır.
-- **Teknik hata ≠ uygun veri.** Bir alan okunamazsa sonuç `UNKNOWN` olur; bulgu çözülmez, "İnceleme gerekli"ye düşer.
-- **Kapsam dışı ≠ düzeltildi.** Kuralı kapatmak, varlığı silmek ya da kapsamdan çıkarmak bulguyu "Kapsam dışı" yapar;
-  çözüm başarısına eklenmez.
-- **Onay ≠ doğruluk.** Onaylanan değişiklik uygulandıktan sonra bile kayıt yeniden kontrol edilir.
-- **Çekirdeğe dokunmaz.** GLPI dosyaları değiştirilmez; nesne, yetki, olay (hook), arama ve otomatik işlem
-  mekanizmaları kullanılır. Varlıklar doğrudan SQL ile değil, GLPI nesne güncellemesiyle değiştirilir.
-
-## Özellikler
-
-- **8 kural şablonu** (DQ-01 … DQ-08): zorunlu alan, sorumlu, pasif kullanıcı, değer kümesi, koşullu zorunluluk,
-  referans bütünlüğü, güncellik, iş sahibi teyidi. Serbest SQL / PHP ifadesi / düzenli ifade yoktur.
-- **Yan etkisiz önizleme** ve **sürümleme**: kural yayına alınmadan örnek kayıtlardaki etkisi görülür; her yayın yeni
-  sürümdür, kimin ne zaman değiştirdiği saklanır.
-- **Kararlı alan kataloğu**: alanlar kararlı anahtarlarla (`core:locations_id`, `rel:groups_tech`, `virt:responsible`,
-  `agent:last_contact`, `attest:…`) tutulur; alan kaybolur ya da tipi değişirse kural **askıya** alınır.
-- **Partili, devam ettirilebilir tarama** + **olay kuyruğu**: kayıt kaydedilince yalnız o kayıt yeniden kontrol edilir.
-- **Tekilleştirilmiş bulgular** ve **dönemler**: aynı sorun tekrar tekrar açılmaz; tekrar eden sorun yeni dönem olur.
-- **Sorumlu atama** (kural → varlığın teknik grubu / sorumlusu → birimin veri kalitesi grubu → Atama bekliyor).
-- **Destek kaydı köprüsü**: varlık + sorumlu başına tek kayıt, takip notları, yalnız doğrulanmış çözüm, erken kapanma
-  politikası.
-- **Düzeltme ve onay**: eklenti içinden öneri, kurala bağlı tek / iki sıralı onay, anlık görüntü ve çakışma kontrolü,
-  atomik yazım, kanıt eki.
-- **Süreli istisnalar** ve süre dolumunda otomatik yeniden kontrol.
-- **İş sahibi teyidi** (otomatik envanterden ayrı).
-- **Açıklanabilir puanlama**: kalite puanı + değerlendirme kapsamı birlikte.
-- **Güvenli CSV dışa aktarma**, **denetim izi** (kullanıcı ve servis kimliği ayrı), **10 ayrı profil yetkisi**,
-  **kurum birimi yalıtımı**.
-
-## Nasıl çalışır
-
-```
-           ┌────────────────────── Tarama / yeniden kontrol ◄──────────────────────┐
-           ▼                                                                         │
-  Kuralı değerlendir ──► PASS ─► (bulgu varsa) Çözüldü ─► destek kaydına çözüm       │
-           │                                                                         │
-           ├──► FAIL ─► Bulgu aç / güncelle ─► Sorumluya ata ─► (destek kaydı)       │
-           │                     │                                                   │
-           │                     └─► Düzeltme: GLPI ekranından / eklentiden          │
-           │                          (gerekiyorsa onay) ─► uygula ─────────────────┘
-           │
-           ├──► UNKNOWN ─► İnceleme gerekli (çözülmez)
-           └──► NOT_APPLICABLE ─► puana girmez (bulgu varsa Kapsam dışı)
+```mermaid
+flowchart LR
+    A([Tarama / olay]) --> B{Kuralı<br/>değerlendir}
+    B -- PASS --> C[Bulgu varsa<br/>Çözüldü]
+    B -- FAIL --> D[Bulgu aç /<br/>güncelle]
+    B -- UNKNOWN --> E[İnceleme<br/>gerekli]
+    B -- NOT_APPLICABLE --> F[Puana girmez]
+    D --> G[Sorumluya ata]
+    G --> H[Destek kaydı]
+    H --> I[Düzeltme<br/>GLPI ekranı / eklenti]
+    I --> J{Onay gerekli mi?}
+    J -- evet --> K[Onay adımları]
+    J -- hayır --> L[Uygula]
+    K --> L
+    L --> A
+    C --> M[Destek kaydına çözüm]
 ```
 
-**Örnek senaryo.** `LT-042` adlı bilgisayarın konumu boş ve bağlı kullanıcısı pasif. İki kural uygunsuz çıkar; sistem
-iki bulgu açar ve aynı varlık + aynı sorumlu grup için **tek** düzeltme destek kaydında toplar. Teknisyen konumu GLPI
-ekranından girer; olay kuyruğu kaydı yeniden kontrol eder, konum bulgusu çözülür, kayda takip notu düşer. Kullanıcı
-değişikliği onay gerektiriyorsa eklentiden önerilir, onaylanınca uygulanır ve yeniden kontrol edilir. İki bulgu da
-çözülünce destek kaydına çözüm eklenir; kapanışı GLPI'nin kendi politikası yürütür.
+**Örnek senaryo.** `LT-042` adlı bilgisayarın konumu boş ve bağlı kullanıcısı pasif. İki kural uygunsuz çıkar; iki bulgu
+açılır ve aynı varlık + aynı sorumlu grup için **tek** düzeltme destek kaydında toplanır. Teknisyen konumu GLPI ekranından
+girer; kayıt kendiliğinden yeniden kontrol edilir ve konum bulgusu çözülür. Kullanıcı değişikliği onay gerektiriyorsa
+eklentiden önerilir, onaylanınca uygulanır ve yeniden kontrol edilir. İki bulgu da çözülünce destek kaydına çözüm eklenir.
 
-## Kurulum
+---
 
-### Gereksinimler
+## 🚀 Kurulum
 
-- GLPI 11.0.x, PHP 8.2+, sunucu cron'u (otomatik görevler harici modda çalışır).
-- Kurulumu yapan profilde yapılandırma güncelleme yetkisi.
-
-### Paketten
+> [!NOTE]
+> Gereksinimler: GLPI 11.0.x · PHP 8.2+ · MySQL / MariaDB · sunucu cron'u. Başka eklenti gerekmez.
 
 ```bash
 # 1) Paketi eklenti dizinine açın
-sudo tar xzf /tmp/inventoryquality-0.2.0.tgz -C /var/www/glpi/plugins
+sudo tar xzf inventoryquality-0.2.1.tgz -C /var/www/glpi/plugins
 sudo chown -R www-data:www-data /var/www/glpi/plugins/inventoryquality
 
-# 2) Kurun ve etkinleştirin (yönetici kullanıcı adınızla)
+# 2) Kurun ve etkinleştirin
 sudo -u www-data php /var/www/glpi/bin/console glpi:plugin:install inventoryquality -u <yönetici>
 sudo -u www-data php /var/www/glpi/bin/console glpi:plugin:activate inventoryquality
 ```
 
-Kaynak koddan kurmak için depoyu `plugins/inventoryquality` dizinine klonlayın (`tests/` dizini gerekmez).
+```cron
+# 3) Otomatik görevler harici modda çalışır
+* * * * * www-data /usr/bin/php /var/www/glpi/front/cron.php
+```
 
-Kurulum şunları yapar:
+Menü: **Araçlar → Envanter Veri Kalitesi** (menünün görünmesi için oturumu kapatıp açın). Kaynak koddan kurmak için depoyu
+`plugins/inventoryquality` dizinine klonlayın; `tests/` ve `docs/` gerekmez.
+
+<details>
+<summary><b>Kurulum neler yapar?</b></summary>
 
 - 15 tablo oluşturur (`glpi_plugin_inventoryquality_*`, yalnız yoksa),
 - yapılandırma güncelleme yetkisi olan profillere tüm eklenti haklarını verir (diğerleri 0),
 - üç otomatik görev kaydeder (`iqqueue`, `iqscan`, `iqexpire`),
 - alan kataloğunu oluşturur ve kuralları doğrular,
+- listelerin varsayılan sütunlarını ekler,
 - GLPI'nin derlenmiş şablon önbelleğini temizler (güncellemeden sonra eski ekran görünmesin diye).
 
-Menü: **Araçlar → Envanter Veri Kalitesi**. Menünün görünmesi için oturumu kapatıp açın.
+</details>
 
-### Sunucu cron'u
+<details>
+<summary><b>Güncelleme ve kaldırma</b></summary>
 
-```cron
-* * * * * www-data /usr/bin/php /var/www/glpi/front/cron.php
-```
-
-## Güncelleme ve kaldırma
-
-- **Güncelleme:** yeni paketi aynı dizine açın, `glpi:plugin:install` (gerekirse `--force`) + `glpi:plugin:activate`.
-  Veri korunur; yeni tablolar / görevler eklenir, kopya görev oluşmaz. GLPI sürüm değişince eklentiyi pasifleştirir;
-  Eklentiler sayfasından ya da konsoldan yeniden etkinleştirin. **"Kaldır" yapmayın** — tüm veri silinir.
+- **Güncelleme:** yeni paketi aynı dizine açın, `glpi:plugin:install` + `glpi:plugin:activate`. Veri korunur, kopya görev
+  oluşmaz. **"Kaldır" yapmayın** — tüm veri silinir.
 - **Devre dışı bırakma** hiçbir kaydı silmez; olaylar ve otomatik görevler durur.
-- **Kaldırma** eklentinin **tüm** tablolarını, ayarlarını, profil yetkisini, otomatik görevlerini ve kanıt dosyalarını
-  siler. Açılmış GLPI destek kayıtları GLPI'de kalır.
+- **Kaldırma** eklentinin tüm tablolarını, ayarlarını, yetkisini, görevlerini ve kanıt dosyalarını siler. Açılmış GLPI
+  destek kayıtları GLPI'de kalır.
 
-## İlk kullanım — önerilen pilot
+</details>
 
-1. **Ayarlar → Kurum birimi ayarları:** pilot birim için "Envanter Veri Kalitesi" destek grubunu seçin. Destek kaydı
-   modu varsayılan olarak **yalnız bulgu**dur.
-2. **Kurallar → Şablondan yeni kural:** şablon seçin, hedef alanı / değerleri girin, **Önizle** ile etkisini görün,
-   **Yeni sürüm olarak yayınla**, **Etkinleştir**.
+### İlk kullanım — önerilen pilot
+
+1. **Ayarlar → Kurum birimi ayarları:** pilot birim için "Envanter Veri Kalitesi" destek grubunu seçin (destek kaydı modu
+   varsayılan olarak **yalnız bulgu**).
+2. **Kurallar → Şablondan yeni kural:** şablonu seçin, **Önizle**, **Yeni sürüm olarak yayınla**, **Etkinleştir**.
 3. **İşler → Tam tarama başlat.** Sonuçlar **Genel Bakış** ve **Bulgular** ekranlarında.
-4. Bulgu hacmi makulse birimde destek kaydı modunu **Aç** yapın; düzeltme gerektiren kurallar için onay politikası
-   tanımlayın.
+4. Hacim makulse birimde destek kaydı modunu **Aç** yapın; düzeltme gerektiren kurallara onay politikası tanımlayın.
 
-## Kurallar (DQ-01 … DQ-08)
+---
+
+## 📏 Kurallar
 
 | Şablon | Uygunsuzluk koşulu | Düzeltme yaklaşımı |
 | --- | --- | --- |
 | **DQ-01** Zorunlu alan | Kapsamdaki varlıkta zorunlu alan boş | Yetkili kişi geçerli değer girer |
-| **DQ-02** Sorumlu | Aktif varlıkta aktif teknik sorumlu kişi ya da teknik grup yok | Sorumluluk ataması (gerekirse onaylı) |
+| **DQ-02** Sorumlu | Aktif varlıkta aktif teknik sorumlu ya da teknik grup yok | Sorumluluk ataması (gerekirse onaylı) |
 | **DQ-03** Pasif kullanıcı | Bağlı kullanıcı pasif, silinmiş ya da süresi dolmuş | Geçerli ilişki atanır |
 | **DQ-04** Değer kümesi | Alan izin verilen seçeneklerin dışında | Tanımlı seçeneklerden biri seçilir |
-| **DQ-05** Koşullu zorunluluk | Önkoşul sağlanınca (ör. durum "Kullanımda") hedef alan boş | Kapsam koşulu + eksik bilgi birlikte |
+| **DQ-05** Koşullu zorunluluk | Önkoşul sağlanınca (ör. "Kullanımda") hedef alan boş | Kapsam koşulu + eksik bilgi birlikte |
 | **DQ-06** Referans bütünlüğü | Alan artık bulunmayan bir kayda bağlı | Doğru referans seçilir; tahmin yapılmaz |
-| **DQ-07** Güncellik | Veri kaynağının son görülme tarihi N günü aşmış ya da yok | Ajan / kaynak incelenir; tarih elle ileri alınmaz |
-| **DQ-08** İş sahibi teyidi | Seçili alanlar periyotta iş sahibince teyit edilmemiş | İş sahibi teyit verir |
+| **DQ-07** Güncellik | Veri kaynağının son görülmesi N günü aşmış ya da yok | Ajan / kaynak incelenir; tarih elle ileri alınmaz |
+| **DQ-08** İş sahibi teyidi | Seçili alanlar periyotta teyit edilmemiş | İş sahibi teyit verir |
 
-**Kural tanımı:** kararlı kod (değişmez, tekil) · ad · kurum birimi + alt birim politikası · varlık tipi · durum kapsamı
-· koşul · önem (Düşük / Orta / Yüksek / Kritik) · ağırlık (1–100) · süre (gün; 0 = birim varsayılanı) · sorumlu grup /
-kişi · destek kaydı politikası (birim ayarına göre / açma) · düzeltme onay politikası.
+Her kuralın **kararlı kodu**, kapsamı (kurum birimi + alt birimler, varlık tipi, durum), **önemi** (Düşük → Kritik),
+**ağırlığı** (1–100), süresi, sorumlusu, destek kaydı politikası ve düzeltme **onay politikası** vardır.
 
-**Operatörler:** boş / dolu, eşit / eşit değil, kümede / küme dışında, tarih eşiği (N günden eski / son N gün),
-bağlı kayıt mevcut / aktif.
-
-**Boşluk kuralı (veri tipine göre):** yalnız boşluklardan oluşan metin boştur; `"0"` metni, sayısal `0` ve `false`
-geçerli değerdir; açılır listede `0` "seçilmemiş" demektir; boş çoklu seçim ayrıca değerlendirilir.
-
-**Sonuçlar:** `PASS` uygun · `FAIL` uygunsuz (bulgu) · `UNKNOWN` değerlendirilemedi (inceleme) · `NOT_APPLICABLE`
-önkoşul sağlanmadı (puana girmez).
-
-## Bulgular ve yaşam döngüsü
-
-Kararlı anahtar: **kurum birimi + varlık tipi + varlık kimliği + kural + hedef alan**. Aynı anahtarda tek güncel bulgu
-bulunur; benzersizlik kısıtı eşzamanlı işçilerde bile aynı bulguyu korur. Kural sürümü anahtarın parçası değildir.
-
-| Durum | Anlamı |
-| --- | --- |
-| Açık | Kural FAIL döndü; düzeltme bekleniyor |
-| İşlemde | Sorumlu işi üstlendi |
-| Onay bekliyor | Düzeltme önerisi onay bekliyor |
-| Doğrulama bekliyor | Düzeltme bildirildi / uygulandı; güncel veri henüz kontrol edilmedi |
-| Çözüldü | Güncel veride PASS; doğrulama kaydı mevcut |
-| İstisna | Yetkili kişi gerekçe ve bitiş tarihiyle erteledi; sorun çözülmüş sayılmaz |
-| İnceleme gerekli | Veri okunamadı, onaylayan bulunamadı ya da işlem tamamlanamadı |
-| Kapsam dışı | Varlık / kural kapsamdan çıktı; sebep kaydedilir, çözüm sayılmaz |
-
-Çözülmüş kayıtta aynı kural yeniden FAIL verirse **yeni dönem** açılır; önceki dönem korunur. İlk / son görülme, tekrar
-sayısı ve her dönem saklanır.
-
-## Sorumlu atama
-
-1. Kuralda tanımlı aktif ve yetkili grup / kişi
-2. Varlığın teknik grubu / aktif teknik sorumlusu
-3. Birimin "Envanter Veri Kalitesi" destek grubu
-4. Hiçbiri yoksa **Atama bekliyor** kuyruğu (Genel Bakış'ta uyarı)
-
-Kullanıcı aktif, silinmemiş, geçerlilik tarihleri içinde ve varlığın biriminde profili olmalıdır; grup var, atanabilir ve
-birimden görünür olmalıdır. Pasif kullanıcı hiçbir zaman atanmaz.
-
-## Destek kaydı entegrasyonu
-
-- Aynı birim + aynı varlık + aynı sorumlu için **tek açık düzeltme kaydı**; bir kayıt birden çok bulguyu taşır; farklı
-  birimler birleştirilmez. Atama bekleyen bulgu için kayıt açılmaz.
-- Kayıt "İstek" türünde açılır, varlığa tür + kimlikle bağlanır, sorumluya atanır; içerikte kural kodları, beklenen ve
-  mevcut durumun maskelenmiş özeti, kontrol zamanı ve hedef tarih bulunur.
-- Yeni bulgular, düzeltme / onay / ret olayları **takip notu** olarak eklenir.
-- Tüm bağlı bulgular PASS ile çözülünce **çözüm** eklenir (doğrudan Kapalı yapılmaz; GLPI'nin çözüm onayı ve otomatik
-  kapanış politikası korunur). İstisna / kapsam dışı ile kapanışta metin "düzeltildi" demez.
-- Kayıt bulgular çözülmeden kapatılırsa bulgular açık kalır, tutarsızlık denetim izine yazılır, eski bağlantı saklanarak
-  **yeni takip kaydı** açılır.
-
-## Düzeltme ve onay akışı
-
-**Üç yol:**
-
-1. **GLPI ekranından düzeltme** — kayıt kaydedilince olay kuyruğu yeniden kontrol eder.
-2. **Eklenti içinden yetkili düzeltme** — onaysız politikada "Düzeltme uygula" yetkilisi doğrudan uygular.
-3. **Onaylı düzeltme** — öneri, kuraldaki onay adımlarından geçmeden envantere yazılmaz.
-
-**Onay politikası** (kuraldan gelir; öneren gevşetemez):
-
-| Seçenek | Davranış |
-| --- | --- |
-| Onaysız | Yetkili kişi doğrudan uygular |
-| 1 onay adımı | Grup ve/veya kişi |
-| 2 sıralı onay adımı | 1. adım tamamlanmadan 2. adım açılmaz |
-| Biri yeterli (any) | Gruptan bir yetkili onaylar |
-| Belirlenmiş herkes (all) | Gruptaki her aktif üye (öneren hariç) onaylamalı |
-| Kendi talebini onaylama | Varsayılan **kapalı** |
-
-Ret durumunda öneri reddedilir (gerekçe zorunlu), envanter değişmez, bulgu açık kalır. Onaylayan bulunamaz ya da
-pasifleşirse iş **İnceleme gerekli**ye düşer; onay otomatik verilmez; yetkili yeniden atama geçmişe yazılır.
-
-**Güvenli uygulama** (`CorrectionProcessor`):
-
-```
-claimOnce → reloadAssetAndPolicy → checkEntityRightsAndRequiredApprovals
-→ validateAllowedFieldsTypesAndReferences → compareTargetFieldsWithSnapshot
-→ applyWithVerifiedAdapterAndAudit → enqueueVerificationAndNotifications → APPLIED (doğrulama bekliyor)
-```
-
-- Öneri anında hedef alanın değeri, varlığın birimi ve kural sürümü **anlık görüntü** olarak saklanır.
-- Uygulamada varlık satırı aynı veritabanı işleminde **kilitlenir** (`SELECT … FOR UPDATE`); hedef alan, birim ya da
-  onay politikası değişmişse **CONFLICT** — yazma yapılmaz. İlgisiz alanın değişmesi çakışma değildir.
-- GLPI nesne güncellemesi, GLPI tarihçesi ve eklenti denetim kaydı **aynı işlemde**; herhangi bir adım başarısızsa
-  hepsi geri alınır, düzeltme "uygulandı" işaretlenmez ("Yeniden dene" ile tekrar denenebilir).
-- Her düzeltmenin tekil işlem anahtarı vardır; tekrar çalışan iş değişikliği ikinci kez uygulamaz.
-- Kanıt eki: PDF / PNG / JPG / düz metin, en fazla 5 MB; tür dosya içeriğinden belirlenir.
-
-## İstisnalar
-
-- **Gerekçe**, **onaylayan** (istisnayı veren yetkili), **kapsam** (bulgu), **bitiş tarihi** (en fazla 365 gün) zorunlu;
-  telafi edici işlem isteğe bağlı.
-- İstisna bir yaşam döngüsü durumudur: altındaki FAIL'i PASS yapmaz, puanı değiştirmez, istisna sayısı ayrıca görünür.
-- Süre dolunca (saatlik görev) kayıt yeniden kontrol edilir: FAIL → Açık, PASS → Çözüldü, UNKNOWN → İnceleme gerekli.
-- İstisna sürerken veri düzelirse bulgu PASS ile çözülür, istisna sona erer. Yetkili istisnayı geri alabilir.
-
-## İş sahibi teyidi
-
-DQ-08 kuralı seçili alanların (ör. kullanıcı, konum) belirlenen periyotta iş sahibince teyit edilmesini ister. Teyit,
-varlığın **Veri Kalitesi** sekmesinden ya da bulgu ekranından verilir; **kimin, hangi alanları, hangi değerlerle ve ne
-zaman** teyit ettiği kaydedilir. Teyit otomatik envanter gelişinden ayrıdır ve veriyi değiştirmez.
-
-Teyit verebilen: varlığın kullanıcısı, teknik sorumlusu, teknik grubunun üyesi ya da "Düzeltme uygula" yetkilisi.
-
-## Kalite puanı ve kapsam
-
-```
-Kalite puanı          = 100 × PASS ağırlığı / (PASS + FAIL ağırlığı)
-Değerlendirme kapsamı = 100 × (PASS + FAIL ağırlığı) / (PASS + FAIL + UNKNOWN ağırlığı)
-```
-
-Örnek: PASS 7, FAIL 3, UNKNOWN 2 ağırlık → puan **%70**, kapsam **%83,3**. Değerlendirilen ağırlık 0 ise
-"Hesaplanamadı", uygulanabilir kontrol yoksa "Kapsam yok" gösterilir (ikisi de %100 yapılmaz). Düşük kapsamda puan
-"sağlıklı" etiketiyle sunulmaz. Kurum puanı ağırlıkların toplamından hesaplanır; ölçüm tanımlı kurallara uyumu gösterir,
-fiziksel gerçekliğin ya da mevzuat uyumunun tamamını kanıtlamaz.
-
-## Ekranlar
-
-| Ekran | İçerik |
-| --- | --- |
-| **Genel Bakış** | Puan + kapsam, açık / gecikmiş / atama bekleyen / incelemedeki bulgular, kural bazında sonuçlar, yaş dağılımı, düzeltme ve istisna göstergeleri, tarama sağlığı, CSV |
-| **Bulgular** | GLPI arama motoruyla liste: varlık, kural, durum, önem, sorumlu, hedef tarih, son kontrol filtreleri |
-| **Bulgu Detayı** | Beklenen / mevcut durum, dönemler, destek kayıtları, düzeltme önerileri, istisna, teyit, işlem geçmişi; Yeniden kontrol · Üstlen · Düzelttim · Ata · Düzeltme öner · İstisna ver |
-| **Düzeltmeler** | Onayımı bekleyenler · Taleplerim · Tümü; önceki / yeni değer, anlık görüntü, kanıt, onay adımları; Onayla · Reddet · Uygula · İptal · Yeniden ata |
-| **İstisnalar** | Geçerli / süresi dolan / geri alınan / sona eren; geri alma |
-| **Kurallar** | Şablondan oluşturma, önizleme, sürümler, etkinleştirme, onay politikası |
-| **İşler** | Taramalar, iş kuyruğu, başarısız işleri yeniden deneme, otomatik görev durumu |
-| **Ayarlar** | Kurum birimi ayarları, genel ayarlar, alan kataloğu |
-| **Varlık → Veri Kalitesi** | Varlığın bulguları, uygulanan kurallar, puan / kapsam, teyitler |
-
-## Yetkiler
-
-**Yönetim → Profiller → (profil) → Envanter Veri Kalitesi.** Bir işlem yetkisi diğerlerini otomatik vermez.
-
-| Yetki | İzin verdiği |
-| --- | --- |
-| Görüntüle | Ekranlar, varlık sekmesi |
-| Kural yönet | Kural oluşturma, yayınlama, etkinleştirme |
-| Tarama başlat / yeniden kontrol | Tam tarama, kuyruk, yeniden kontrol |
-| İş ata | Elle atama, onaylayanı yeniden atama |
-| Düzeltme öner | Eklenti içinden öneri |
-| Düzeltme uygula | Onaysız / onaylanmış düzeltmeyi uygulama (varlıkta güncelleme yetkisi de gerekir) |
-| Onayla | Onay adımında karar |
-| İstisna ver | İstisna verme / geri alma |
-| Rapor dışa aktar | CSV |
-| Ayar yönet | Ayarlar ekranı |
-
-Liste, detay, sayaç, arama, dışa aktarma ve ek indirme **kurum birimi** kısıtından geçer. Alt birim kullanıcısı üst
-birimin (alt birimlere uygulanan) kuralını görür ama değiştiremez.
-
-## Otomatik görevler
-
-| Görev | Sıklık | İş |
+| Sonuç | Anlamı | Puana etkisi |
 | --- | --- | --- |
-| `iqqueue` | 5 dakika | Olay kuyruğu (yeniden kontrol), destek kaydı eşitleme, süren taramaları ilerletme |
-| `iqscan` | Günde bir (01:00–05:00) | Tam tarama; kaçırılan olayları yakalar |
-| `iqexpire` | Saatlik | Süresi dolan istisnalar; onaylayanı pasifleşen düzeltmeler |
+| `PASS` | Uygun | Başarı ve değerlendirilen ağırlığa eklenir |
+| `FAIL` | Uygunsuz → bulgu | Değerlendirilen ağırlığa eklenir |
+| `UNKNOWN` | Alan okunamadı → İnceleme gerekli | Kapsamı düşürür, başarı sayılmaz |
+| `NOT_APPLICABLE` | Önkoşul sağlanmadı | Puana girmez |
 
-Görevler **harici** modda kayıtlıdır. Tarama varsayılan 200 kayıtlık partiler ve zaman bütçesiyle çalışır, kaldığı yeri
-saklar; yarıda kalan tarama "Kısmi" görünür ve değerlendirilmeyen bulgular topluca kapatılmaz.
+<details>
+<summary><b>Boşluk kuralı ve operatörler</b></summary>
 
-## Ayarlar
+- Yalnız boşluklardan oluşan metin **boştur**; `"0"` metni, sayısal `0` ve `false` **geçerli** değerdir; açılır listede `0`
+  "seçilmemiş" demektir; boş çoklu seçim ayrıca değerlendirilir.
+- Operatörler: boş / dolu, eşit / eşit değil, kümede / küme dışında, tarih eşiği (N günden eski / son N gün), bağlı kayıt
+  mevcut / aktif.
 
-**Kurum birimi ayarları** (alt birim üst birimin ayarını devralır): veri kalitesi destek grubu · destek kaydı modu
-(yalnız bulgu / aç) · talep sahibi servis kimliği · varsayılan hedef süre.
-
-**Genel ayarlar:** tarama partisi · tarama ve kuyruk zaman bütçeleri · başarısız iş deneme sayısı · önizleme örnek
-sayısı · düşük kapsam eşiği.
-
-## Güvenlik
-
-- Durum değiştiren tüm isteklerde GLPI CSRF koruması; Twig ile otomatik çıktı kaçışlama.
-- SQL değerleri GLPI sorgu oluşturucusuyla bağlanır; alan ve tablo seçimi doğrulanmış katalogla sınırlıdır; kullanıcı
-  serbest sorgu çalıştıramaz.
-- CSV'de `=`, `+`, `-`, `@` ile başlayan hücreler formül olarak yorumlanmasın diye tek tırnakla yazılır.
-- Kanıt dosyaları rastgele adla, eklenti belge dizininde saklanır; tür içerikten belirlenir; yalnız yetkili ve birim
-  erişimi olan kullanıcıya "attachment" olarak sunulur.
-- Sistem işlemleri servis kimliğiyle (`cron:iqscan`, `cron:iqqueue`, `cron:iqexpire`, `service:recheck`,
-  `service:correction`, `service:manual`) kaydedilir; talep eden ve onaylayan ayrı alanlardadır.
-
-## Veri modeli
-
-Önek: `glpi_plugin_inventoryquality_`
-
-| Tablo | İçerik |
-| --- | --- |
-| `rules` / `ruleversions` | Kararlı kural kimliği, kapsam, yayındaki sürüm / tanım, önem, ağırlık, politika |
-| `fieldmaps` | Alan kataloğu: tip, adaptör, kararlı anahtar, veri tipi, okuma-yazma, GLPI sürümü |
-| `scanruns` / `evaluations` | Taramalar (kaldığı yer, sayaçlar, kilit) / varlık × kural güncel sonucu |
-| `findings` / `cycles` | Bulgular (kararlı anahtar) / açılma–kapanma dönemleri |
-| `ticketlinks` | Bulgu ↔ destek kaydı ↔ dönem, gruplama anahtarı |
-| `corrections` / `approvals` | Öneriler (değişiklik, anlık görüntü, politika, kanıt) / onay adımları |
-| `exceptions` / `attestations` | Süreli istisnalar / iş sahibi teyitleri |
-| `jobs` | Dayanıklı iş kuyruğu (tekil anahtar, kilit, deneme) |
-| `auditlogs` | Denetim izi |
-| `entityconfigs` | Kurum birimi ayarları |
-
-## Mimari
-
-```
-setup.php / hook.php        Eklenti tanımı, menü, yetkiler, olaylar, yaşam döngüsü
-src/RuleEvaluator.php       Saf değerlendirici (veri + kural → sonuç)
-src/RuleTemplates.php       DQ şablonları, tanım üretimi, onay politikası
-src/Catalog.php             Alan kataloğu (keşif, kararlı anahtarlar, senkron)
-src/AssetAdapter.php        Güncel veriyi normalize okuma
-src/ScanRunner.php          Partili tarama, yeniden kontrol, önizleme
-src/FindingService.php      Tekilleştirme, dönemler, durum geçişleri
-src/AssignmentResolver.php  Sorumlu bulma
-src/TicketBridge.php        Destek kaydı oluşturma / bağlama / çözüm
-src/CorrectionService.php   Öneri, onay, ret, yeniden atama
-src/CorrectionProcessor.php Güvenli uygulama (kilit, anlık görüntü, atomik yazım)
-src/ExceptionService.php    Süreli istisnalar
-src/AttestationService.php  İş sahibi teyidi
-src/QualityCalculator.php   Puan ve kapsam
-src/JobQueue.php / Cron.php Kuyruk ve otomatik görevler
-src/Export.php / Evidence.php  Güvenli CSV, kanıt dosyaları
-front/ · templates/         Sayfa denetleyicileri ve Twig ekranları
-tests/                      Davranış testleri (pakete dahil değil)
-```
-
-## Testler
-
-Testler ayrı, temiz bir GLPI 11 kurulumunda (kendi veritabanıyla) koşulur; test verisi oluşturulur ve sonda silinir.
-**Gerçek veri içeren bir GLPI'de çalıştırmayın.** Ayrıntı: [`tests/README.md`](tests/README.md),
-sonuçlar: [`TEST-RAPORU.md`](TEST-RAPORU.md).
-
-| Test grubu | Kontrol |
-| --- | --- |
-| Motor (`iq_test_engine.php`) | 55 |
-| Ekranlar (`iq_test_ui.php`) | 38 |
-| Otomatik görevler (`iq_test_cron.php`, gerçek `front/cron.php`) | 6 |
-| 3. aşama motor (`iq_test_stage3.php`) | 60 |
-| 3. aşama ekranlar (`iq_test_ui3.php`) | 26 |
-| **Toplam** | **185 / 185** |
-
-## Bilinen sınırlar ve yol haritası
-
-- Doğrulanmış varlık tipi: **Computer**. Monitor, Printer, Phone, NetworkEquipment aynı testleri geçince açılacak.
-- Fields eklentisi ve GLPI 11 özel varlık adaptörleri, native Forms ile öneri oluşturma: sonraki aşama.
-- Düzeltme önerisi bulgu başına tek alan (veri modeli çoklu alanı destekler).
-- GLPI'nin kendi liste dışa aktarması (Bulgular listesindeki CSV/PDF düğmesi) eklentinin "Rapor dışa aktar" yetkisini
-  denetlemez; yetki denetimli ve formül güvenli dışa aktarma Genel Bakış'taki CSV bağlantısıdır.
-- Arayüz akışları CLI'de gerçek sayfa dosyalarıyla test edildi; gerçek oturumlu tarayıcı testi henüz tamamlanmadı.
-
-## Sık sorulanlar
-
-**Bulguyu neden elle kapatamıyorum?** Kapanış ilkesi gereği: bulgu yalnız güncel veride kural sağlanınca çözülür.
-Veriyi düzeltin ve "Yeniden kontrol et"e basın ya da birkaç dakika bekleyin.
-
-**Destek kaydı neden açılmadı?** Birim "yalnız bulgu" modunda olabilir, kuralda destek kaydı kapalı olabilir ya da bulgu
-"Atama bekliyor" durumundadır.
-
-**Güncellemeden sonra ekranlar eski görünüyor.** Kurulum şablon önbelleğini temizler; yine de görünüyorsa
-`php bin/console cache:clear` çalıştırın.
-
-**Görevler çalışmıyor.** Görevler harici moddadır; sunucuda GLPI cron satırının olduğundan emin olun
-(**Kurulum → Otomatik İşlemler**).
+</details>
 
 ---
 
-Lisans: GPLv3+ — ayrıntı için [`LICENSE`](LICENSE).
+## 🧷 Bulgu yaşam döngüsü
+
+```mermaid
+stateDiagram-v2
+    direction LR
+    state "Açık" as Open
+    state "İşlemde" as InProgress
+    state "Onay bekliyor" as PendingApproval
+    state "Doğrulama bekliyor" as PendingVerification
+    state "Çözüldü" as Resolved
+    state "İstisna" as Exception
+    state "İnceleme gerekli" as Review
+    state "Kapsam dışı" as OutOfScope
+    [*] --> Open: FAIL
+    Open --> InProgress: üstlen
+    Open --> PendingApproval: düzeltme önerisi
+    InProgress --> PendingVerification: düzelttim
+    PendingApproval --> PendingVerification: onaylandı ve uygulandı
+    PendingApproval --> Open: reddedildi
+    PendingVerification --> Resolved: PASS
+    PendingVerification --> Open: FAIL
+    Open --> Resolved: PASS
+    Open --> Exception: süreli istisna
+    Exception --> Open: süre doldu, FAIL
+    Exception --> Resolved: PASS
+    Open --> Review: UNKNOWN
+    Open --> OutOfScope: kapsam dışı
+    Resolved --> Open: yeniden FAIL, yeni dönem
+```
+
+Kararlı anahtar: **kurum birimi + varlık tipi + varlık + kural + hedef alan**. Aynı anahtarda tek güncel bulgu bulunur;
+benzersizlik kısıtı eşzamanlı işçilerde bile aynı bulguyu korur. İlk / son görülme, tekrar sayısı ve her dönem saklanır.
+
+---
+
+## ✍️ Düzeltme ve onay
+
+**Üç yol:** GLPI ekranından düzeltme (olay kuyruğu yeniden kontrol eder) · eklenti içinden yetkili düzeltme (onaysız
+politikada) · onaylı düzeltme (onaylar tamamlanmadan envantere yazılmaz).
+
+| Onay politikası | Davranış |
+| --- | --- |
+| Onaysız | "Düzeltme uygula" yetkilisi doğrudan uygular |
+| 1 onay adımı | Grup ve/veya kişi |
+| 2 sıralı onay adımı | 1. adım tamamlanmadan 2. adım açılmaz |
+| Biri yeterli · Belirlenmiş herkes | Gruptan bir yetkili ya da her aktif üye (öneren hariç) |
+| Kendi talebini onaylama | Varsayılan **kapalı** |
+
+```text
+claimOnce → reloadAssetAndPolicy → checkEntityRightsAndRequiredApprovals
+          → validateAllowedFieldsTypesAndReferences → compareTargetFieldsWithSnapshot
+          → applyWithVerifiedAdapterAndAudit → enqueueVerificationAndNotifications
+          → APPLIED (doğrulama bekliyor)
+```
+
+- Öneri anında hedef alanın değeri, varlığın birimi ve kural sürümü **anlık görüntü** olarak saklanır.
+- Uygulamada varlık satırı aynı işlemde **kilitlenir**; hedef alan, birim ya da politika değişmişse **CONFLICT** — yazma
+  yapılmaz. İlgisiz bir alanın değişmesi çakışma değildir.
+- GLPI nesne güncellemesi, GLPI tarihçesi ve denetim kaydı **tek işlemde**; bir adım başarısızsa hepsi geri alınır.
+- Ret durumunda (gerekçe zorunlu) envanter değişmez, bulgu açık kalır. Onaylayan bulunamaz ya da pasifleşirse iş
+  **İnceleme gerekli**ye düşer; onay otomatik verilmez.
+
+---
+
+## ⏸️ İstisna · 🙋 Teyit · 📊 Puan
+
+<table>
+<tr>
+<td width="33%" valign="top">
+
+**İstisna**<br>
+Gerekçe, onaylayan, bitiş (≤ 365 gün) zorunlu; telafi edici işlem isteğe bağlı. FAIL'i PASS yapmaz. Süre dolunca
+saatlik görev yeniden kontrol eder: FAIL → Açık, PASS → Çözüldü, UNKNOWN → İnceleme gerekli.
+
+</td>
+<td width="33%" valign="top">
+
+**İş sahibi teyidi**<br>
+DQ-08 kuralı seçili alanların periyotta teyit edilmesini ister. Varlık sekmesinden ya da bulgu ekranından verilir; kim,
+hangi alanlar, hangi değerler ve ne zaman kaydedilir.
+
+</td>
+<td width="33%" valign="top">
+
+**Puan ve kapsam**<br>
+`Puan = PASS / (PASS + FAIL)`<br>
+`Kapsam = (PASS + FAIL) / (PASS + FAIL + UNKNOWN)`<br>
+Ağırlıklarla. Örnek 7 / 3 / 2 → **%70** puan, **%83,3** kapsam.
+
+</td>
+</tr>
+</table>
+
+---
+
+## 🔐 Yetkiler
+
+**Yönetim → Profiller → Envanter Veri Kalitesi.** Bir işlem yetkisi diğerlerini otomatik vermez; liste, detay, sayaç,
+arama, dışa aktarma ve ek indirme **kurum birimi** kısıtından geçer.
+
+| Yetki | İzin verdiği | | Yetki | İzin verdiği |
+| --- | --- | --- | --- | --- |
+| Görüntüle | Ekranlar, varlık sekmesi | | Düzeltme uygula | Onaysız / onaylı düzeltmeyi uygulama |
+| Kural yönet | Kural oluşturma, yayın, etkinleştirme | | Onayla | Onay adımında karar |
+| Tarama başlat | Tarama, kuyruk, yeniden kontrol | | İstisna ver | İstisna verme / geri alma |
+| İş ata | Elle atama, onaylayanı yeniden atama | | Rapor dışa aktar | Güvenli CSV |
+| Düzeltme öner | Eklenti içinden öneri | | Ayar yönet | Ayarlar ekranı |
+
+---
+
+## ⏱️ Otomatik görevler
+
+| Görev | Sıklık | İş |
+| --- | --- | --- |
+| `iqqueue` | 5 dakika | Olay kuyruğu, destek kaydı eşitleme, süren taramalar |
+| `iqscan` | Günde bir (01:00–05:00) | Tam tarama; kaçırılan olayları yakalar |
+| `iqexpire` | Saatlik | Süresi dolan istisnalar, pasifleşen onaylayanlar |
+
+Tarama 200 kayıtlık partiler ve zaman bütçesiyle çalışır, kaldığı yeri saklar; yarıda kalan tarama "Kısmi" görünür ve
+değerlendirilmeyen bulgular topluca kapatılmaz.
+
+---
+
+## 🛡️ Güvenlik
+
+- Durum değiştiren tüm isteklerde GLPI CSRF koruması; Twig ile otomatik çıktı kaçışlama.
+- Değerler GLPI sorgu oluşturucusuyla bağlanır; alan ve tablo seçimi doğrulanmış katalogla sınırlıdır.
+- CSV'de `=`, `+`, `-`, `@` ile başlayan hücreler formül olarak yorumlanmasın diye korunur.
+- Kanıt dosyaları rastgele adla saklanır; tür içerikten belirlenir; yalnız yetkili ve birim erişimi olana sunulur.
+- Sistem işlemleri servis kimliğiyle (`cron:iqscan`, `service:correction` …) kaydedilir; talep eden ve onaylayan ayrıdır.
+
+---
+
+## 🧱 Mimari
+
+<details>
+<summary><b>Dosya yapısı</b></summary>
+
+```text
+setup.php / hook.php           Eklenti tanımı, menü, yetkiler, olaylar, yaşam döngüsü
+src/RuleEvaluator.php          Saf değerlendirici (veri + kural → sonuç)
+src/RuleTemplates.php          DQ şablonları, tanım üretimi, onay politikası
+src/Catalog.php                Alan kataloğu (keşif, kararlı anahtarlar)
+src/AssetAdapter.php           Güncel veriyi normalize okuma
+src/ScanRunner.php             Partili tarama, yeniden kontrol, önizleme
+src/FindingService.php         Tekilleştirme, dönemler, durum geçişleri
+src/AssignmentResolver.php     Sorumlu bulma
+src/TicketBridge.php           Destek kaydı oluşturma / bağlama / çözüm
+src/CorrectionService.php      Öneri, onay, ret, yeniden atama
+src/CorrectionProcessor.php    Güvenli uygulama (kilit, anlık görüntü, atomik yazım)
+src/ExceptionService.php       Süreli istisnalar
+src/AttestationService.php     İş sahibi teyidi
+src/QualityCalculator.php      Puan ve kapsam
+src/JobQueue.php · Cron.php    Kuyruk ve otomatik görevler
+src/Export.php · Evidence.php  Güvenli CSV, kanıt dosyaları
+front/ · templates/            Sayfa denetleyicileri ve Twig ekranları
+tests/                         Davranış testleri (pakete dahil değil)
+```
+
+</details>
+
+<details>
+<summary><b>Veri modeli</b> (önek <code>glpi_plugin_inventoryquality_</code>)</summary>
+
+| Tablo | İçerik |
+| --- | --- |
+| `rules` · `ruleversions` | Kararlı kural kimliği, kapsam, yayındaki sürüm / tanım |
+| `fieldmaps` | Alan kataloğu: anahtar, veri tipi, okuma-yazma, GLPI sürümü |
+| `scanruns` · `evaluations` | Taramalar (kaldığı yer, kilit) · varlık × kural güncel sonucu |
+| `findings` · `cycles` | Bulgular · açılma–kapanma dönemleri |
+| `ticketlinks` | Bulgu ↔ destek kaydı ↔ dönem |
+| `corrections` · `approvals` | Öneriler (değişiklik, anlık görüntü, kanıt) · onay adımları |
+| `exceptions` · `attestations` | Süreli istisnalar · iş sahibi teyitleri |
+| `jobs` · `auditlogs` · `entityconfigs` | İş kuyruğu · denetim izi · birim ayarları |
+
+</details>
+
+---
+
+## 🧪 Testler
+
+Testler ayrı, temiz bir GLPI 11 kurulumunda kendi veritabanıyla koşulur; test verisi oluşturulur ve sonda silinir.
+Ayrıntı: [`tests/README.md`](tests/README.md) · sonuçlar: [`TEST-RAPORU.md`](TEST-RAPORU.md).
+
+| Test grubu | Kontrol |
+| --- | ---: |
+| Motor — kural, tarama, bulgu, atama, destek kaydı, puan, birim yalıtımı | 55 |
+| Ekranlar — gerçek sayfa dosyaları, yetki ve birim yalıtımı | 38 |
+| Otomatik görevler — GLPI'nin gerçek `front/cron.php` çalıştırıcısı | 6 |
+| 3. aşama motor — onay, çakışma, atomiklik, istisna, DQ-07/08, CSV, kanıt | 60 |
+| 3. aşama ekranlar — farklı kullanıcılarla | 26 |
+| **Toplam** | **185 / 185** |
+
+> [!CAUTION]
+> Test betikleri veri oluşturur ve siler. **Gerçek veri içeren bir GLPI'de çalıştırmayın.**
+
+---
+
+## 🗺️ Yol haritası
+
+- [x] Kural motoru, tarama, bulgular, atama, destek kaydı, puan (0.1.0)
+- [x] Düzeltme + onay, istisna, DQ-07 / DQ-08, güvenli CSV, kanıt eki (0.2.0)
+- [x] Varsayılan liste sütunları, ekran düzeltmeleri (0.2.1)
+- [ ] Monitor, Printer, Phone, NetworkEquipment adaptörleri
+- [ ] Fields eklentisi ve GLPI 11 özel varlık adaptörleri
+- [ ] Native Forms ile düzeltme önerisi
+- [ ] Gerçek oturumlu tarayıcı test paketi
+
+---
+
+## ❓ Sık sorulanlar
+
+<details>
+<summary><b>Bulguyu neden elle kapatamıyorum?</b></summary>
+<br>
+Kapanış ilkesi gereği bulgu yalnız güncel veride kural sağlanınca çözülür. Veriyi düzeltip "Yeniden kontrol et"e basın ya
+da birkaç dakika bekleyin.
+</details>
+
+<details>
+<summary><b>Destek kaydı neden açılmadı?</b></summary>
+<br>
+Birim "yalnız bulgu" modunda olabilir, kuralda destek kaydı kapalı olabilir ya da bulgu "Atama bekliyor" durumundadır.
+</details>
+
+<details>
+<summary><b>Yeni oluşturduğum birimdeki veriler görünmüyor.</b></summary>
+<br>
+GLPI görülebilen birimleri oturum açarken belirler. Oturumu kapatıp açın ya da birim seçiminde ağaç yapısını seçin.
+</details>
+
+<details>
+<summary><b>Güncellemeden sonra ekranlar eski görünüyor.</b></summary>
+<br>
+Kurulum şablon önbelleğini temizler; yine de görünüyorsa <code>php bin/console cache:clear</code> çalıştırın.
+</details>
+
+<details>
+<summary><b>Görevler çalışmıyor.</b></summary>
+<br>
+Görevler harici moddadır; sunucuda GLPI cron satırının olduğundan emin olun (<b>Kurulum → Otomatik İşlemler</b>).
+</details>
+
+---
+
+<div align="center">
+
+**inventoryquality** · Pınar Topuz · [GPLv3+](LICENSE)
+
+<sub>Değişiklikler: <a href="CHANGELOG.md">CHANGELOG.md</a> · Test raporu: <a href="TEST-RAPORU.md">TEST-RAPORU.md</a></sub>
+
+</div>
