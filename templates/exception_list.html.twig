@@ -1,0 +1,33 @@
+{% include '@inventoryquality/nav.html.twig' %}
+
+<ul class="nav nav-tabs mb-3">
+   {% for k, l in {'active': __('Geçerli', 'inventoryquality'), 'expired': __('Süresi dolan', 'inventoryquality'), 'revoked': __('Geri alınan', 'inventoryquality'), 'ended': __('Sona eren', 'inventoryquality'), 'all': __('Tümü', 'inventoryquality')} %}
+      <li class="nav-item"><a class="nav-link {{ status == k ? 'active' : '' }}" href="{{ self }}?status={{ k }}">{{ l }}</a></li>
+   {% endfor %}
+</ul>
+
+<div class="card">
+   <div class="table-responsive">
+   <table class="table table-sm card-table table-vcenter">
+      <thead><tr><th>#</th><th>{{ __('Bulgu', 'inventoryquality') }}</th><th>{{ __('Varlık', 'inventoryquality') }}</th><th>{{ __('Kural', 'inventoryquality') }}</th>
+         <th>{{ __('Bitiş', 'inventoryquality') }}</th><th>{{ __('Onaylayan', 'inventoryquality') }}</th><th>{{ __('Gerekçe', 'inventoryquality') }}</th><th>{{ __('Telafi edici işlem', 'inventoryquality') }}</th><th>{{ __('Durum', 'inventoryquality') }}</th><th></th></tr></thead>
+      <tbody>
+      {% for e in list %}
+         <tr>
+            <td>{{ e.id }}</td><td><a href="{{ base }}/finding.form.php?id={{ e.findings_id }}">#{{ e.findings_id }}</a></td><td>{{ e.asset }}</td><td>{{ e.rule }}</td>
+            <td class="text-nowrap {{ e.soon ? 'text-warning' : '' }}">{{ e.end }}</td><td>{{ e.by }}</td><td class="small">{{ e.reason }}</td><td class="small">{{ e.compensating }}</td>
+            <td>{{ e.status_label }}{% if e.end_reason %}<div class="small text-secondary">{{ e.end_reason }}</div>{% endif %}</td>
+            <td>{% if can_revoke and e.status == 'active' %}
+               <form method="post" action="{{ self }}" class="d-flex gap-1"><input type="hidden" name="_glpi_csrf_token" value="{{ csrf_token() }}">
+                  <input class="form-control form-control-sm" name="reason" placeholder="{{ __('neden', 'inventoryquality') }}">
+                  <button class="btn btn-sm btn-outline-danger" name="revoke" value="{{ e.id }}">{{ __('Geri al', 'inventoryquality') }}</button></form>
+            {% endif %}</td>
+         </tr>
+      {% else %}
+         <tr><td colspan="10" class="text-secondary">{{ __('Kayıt yok.', 'inventoryquality') }}</td></tr>
+      {% endfor %}
+      </tbody>
+   </table>
+   </div>
+   <div class="card-footer small text-secondary">{{ __('İstisna sorunu çözmez ve puanda uygunsuz sayılmaya devam eder. Süre dolunca kayıt yeniden kontrol edilir.', 'inventoryquality') }}</div>
+</div>

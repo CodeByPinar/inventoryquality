@@ -1,0 +1,73 @@
+<div class="row g-3">
+   <div class="col-12 d-flex flex-wrap gap-3 align-items-center">
+      <div><span class="text-secondary">{{ __('Kalite puanı', 'inventoryquality') }}:</span> <strong>{{ score_txt }}</strong></div>
+      <div><span class="text-secondary">{{ __('Değerlendirme kapsamı', 'inventoryquality') }}:</span> <strong>{{ cov_txt }}</strong></div>
+      <div class="text-secondary small">{{ __('Uygulanan kural: %d', 'inventoryquality')|format(evals|length) }}</div>
+   </div>
+
+   <div class="col-12">
+      <h4>{{ __('Bulgular', 'inventoryquality') }}</h4>
+      <table class="table table-sm">
+         <thead><tr><th>#</th><th>{{ __('Kural', 'inventoryquality') }}</th><th>{{ __('Durum', 'inventoryquality') }}</th><th>{{ __('Mevcut durum', 'inventoryquality') }}</th><th>{{ __('Son kontrol', 'inventoryquality') }}</th><th>{{ __('Hedef tarih', 'inventoryquality') }}</th></tr></thead>
+         <tbody>
+         {% for x in findings %}
+            <tr>
+               <td><a href="{{ base }}/finding.form.php?id={{ x.f.id }}">{{ x.f.id }}</a></td>
+               <td>{{ x.rule.code|default('?') }} · {{ x.rule.name|default('') }}</td>
+               <td>{{ x.badge|raw }}</td>
+               <td class="small">{% for k, v in x.observed %}{{ labels[k].label|default(k) }}: {{ v }}{% if not loop.last %}; {% endif %}{% endfor %}</td>
+               <td class="text-nowrap small">{{ x.f.last_check }}</td>
+               <td class="text-nowrap small">{{ x.f.due_date }}</td>
+            </tr>
+         {% else %}<tr><td colspan="6" class="text-secondary">{{ __('Bu varlık için bulgu yok.', 'inventoryquality') }}</td></tr>{% endfor %}
+         </tbody>
+      </table>
+   </div>
+
+   {% if attest.rules %}
+   <div class="col-12">
+      <h4>{{ __('İş sahibi teyidi', 'inventoryquality') }}</h4>
+      <div class="small text-secondary mb-2">
+         {% for r in attest.rules %}<div>{{ r.code }}: {{ r.labels }} — {{ __('her %d günde bir', 'inventoryquality')|format(r.days) }}</div>{% endfor %}
+      </div>
+      {% if attest.can %}
+         <form method="post" action="{{ base }}/attest.php" class="mb-2">
+            <input type="hidden" name="_glpi_csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="itemtype" value="{{ itemtype }}"><input type="hidden" name="items_id" value="{{ items_id }}">
+            {% for x in attest.fields %}
+               <label class="form-check form-check-inline"><input class="form-check-input" type="checkbox" name="attest_fields[]" value="{{ x.key }}" checked>
+                  <span class="form-check-label">{{ x.label }}: <strong>{{ x.value }}</strong></span></label>
+            {% endfor %}
+            <div class="d-flex gap-2 mt-2">
+               <input class="form-control" name="attest_comment" placeholder="{{ __('Not (isteğe bağlı)', 'inventoryquality') }}">
+               <button class="btn btn-success text-nowrap" name="attest" value="1"><i class="ti ti-check me-1"></i>{{ __('Bilgiler doğru, teyit ediyorum', 'inventoryquality') }}</button>
+            </div>
+         </form>
+      {% endif %}
+      <table class="table table-sm">
+         <thead><tr><th>{{ __('Zaman', 'inventoryquality') }}</th><th>{{ __('Teyit eden', 'inventoryquality') }}</th><th>{{ __('Alanlar', 'inventoryquality') }}</th><th>{{ __('Not', 'inventoryquality') }}</th></tr></thead>
+         <tbody>
+         {% for a in attest.recent %}<tr><td class="text-nowrap small">{{ a.date }}</td><td>{{ a.user }}</td><td class="small">{{ a.fields }}</td><td class="small">{{ a.comment }}</td></tr>
+         {% else %}<tr><td colspan="4" class="text-secondary">{{ __('Henüz teyit yok.', 'inventoryquality') }}</td></tr>{% endfor %}
+         </tbody>
+      </table>
+   </div>
+   {% endif %}
+
+   <div class="col-12">
+      <h4>{{ __('Uygulanan kurallar', 'inventoryquality') }}</h4>
+      <table class="table table-sm">
+         <thead><tr><th>{{ __('Kural', 'inventoryquality') }}</th><th>{{ __('Tanım', 'inventoryquality') }}</th><th>{{ __('Sonuç', 'inventoryquality') }}</th><th>{{ __('Değerlendirme', 'inventoryquality') }}</th></tr></thead>
+         <tbody>
+         {% for x in evals %}
+            <tr>
+               <td>{{ x.rule.code }} <span class="text-secondary">v{{ x.version }}</span></td>
+               <td class="small">{{ x.describe }}</td>
+               <td>{{ x.e.result }}</td>
+               <td class="text-nowrap small">{{ x.e.evaluated_at }}</td>
+            </tr>
+         {% else %}<tr><td colspan="4" class="text-secondary">{{ __('Bu varlık henüz değerlendirilmedi ya da hiçbir etkin kuralın kapsamında değil.', 'inventoryquality') }}</td></tr>{% endfor %}
+         </tbody>
+      </table>
+   </div>
+</div>

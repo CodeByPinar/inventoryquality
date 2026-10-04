@@ -1,0 +1,98 @@
+{% include '@inventoryquality/nav.html.twig' %}
+
+<div class="row g-3">
+   <div class="col-lg-8">
+      <div class="card mb-3">
+         <div class="card-header d-flex align-items-center gap-2">
+            <h3 class="card-title mb-0">{{ __('Düzeltme', 'inventoryquality') }} #{{ c.id }}</h3>
+            <span class="badge bg-azure-lt">{{ status }}</span>
+         </div>
+         <div class="card-body">
+            <dl class="row mb-0">
+               <dt class="col-sm-3">{{ __('Varlık', 'inventoryquality') }}</dt>
+               <dd class="col-sm-9">{% if asset.url %}<a href="{{ asset.url }}">{{ asset.label }}</a>{% else %}{{ asset.label }}{% endif %} <span class="text-secondary">({{ entity }})</span></dd>
+               <dt class="col-sm-3">{{ __('Bulgu / kural', 'inventoryquality') }}</dt>
+               <dd class="col-sm-9"><a href="{{ base }}/finding.form.php?id={{ c.findings_id }}">#{{ c.findings_id }}</a> · {{ rule.code }} · {{ rule.name }}</dd>
+               <dt class="col-sm-3">{{ __('Değişiklik', 'inventoryquality') }}</dt>
+               <dd class="col-sm-9">{% for x in changes %}<div>{{ x.label }}: <span class="text-decoration-line-through text-secondary">{{ x.old }}</span> → <strong>{{ x.new }}</strong></div>{% endfor %}
+                  <div class="small text-secondary">{{ __('Önceki değer okunma zamanı (anlık görüntü)', 'inventoryquality') }}: {{ read_at }}</div></dd>
+               <dt class="col-sm-3">{{ __('Gerekçe', 'inventoryquality') }}</dt>
+               <dd class="col-sm-9">{{ c.reason }}</dd>
+               <dt class="col-sm-3">{{ __('Kanıt', 'inventoryquality') }}</dt>
+               <dd class="col-sm-9">{% if evidence %}<a href="{{ evidence.url }}"><i class="ti ti-paperclip"></i> {{ evidence.name }}</a> <span class="text-secondary">({{ evidence.size }} KB)</span>{% else %}—{% endif %}</dd>
+               <dt class="col-sm-3">{{ __('Öneren', 'inventoryquality') }}</dt>
+               <dd class="col-sm-9">{{ requester }} · {{ date }}</dd>
+               <dt class="col-sm-3">{{ __('Onay politikası', 'inventoryquality') }}</dt>
+               <dd class="col-sm-9">{{ policy }}{% for s in steps %}<div class="small text-secondary">{{ s }}</div>{% endfor %}</dd>
+               {% if applied %}<dt class="col-sm-3">{{ __('Uygulandı', 'inventoryquality') }}</dt><dd class="col-sm-9">{{ applied }}</dd>{% endif %}
+               {% if c.result_message %}<dt class="col-sm-3">{{ __('Sonuç', 'inventoryquality') }}</dt><dd class="col-sm-9 text-danger">{{ c.result_message }}</dd>{% endif %}
+            </dl>
+         </div>
+      </div>
+
+      <div class="card mb-3">
+         <div class="card-header"><h3 class="card-title">{{ __('Onay adımları', 'inventoryquality') }}</h3></div>
+         <table class="table table-sm card-table">
+            <thead><tr><th>{{ __('Adım', 'inventoryquality') }}</th><th>{{ __('Onaylayan', 'inventoryquality') }}</th><th>{{ __('Karar türü', 'inventoryquality') }}</th><th>{{ __('Durum', 'inventoryquality') }}</th><th>{{ __('Karar veren', 'inventoryquality') }}</th><th>{{ __('Zaman', 'inventoryquality') }}</th><th>{{ __('Not', 'inventoryquality') }}</th></tr></thead>
+            <tbody>
+            {% for a in approvals %}<tr><td>{{ a.step }}</td><td>{{ a.target }}</td><td>{{ a.mode }}</td><td>{{ a.status }}</td><td>{{ a.by }}</td><td class="text-nowrap">{{ a.date }}</td><td>{{ a.comment }}</td></tr>
+            {% else %}<tr><td colspan="7" class="text-secondary">{{ __('Bu kuralda onay adımı yok (yetkili kişi doğrudan uygular).', 'inventoryquality') }}</td></tr>{% endfor %}
+            </tbody>
+         </table>
+      </div>
+
+      <div class="card">
+         <div class="card-header"><h3 class="card-title">{{ __('İşlem geçmişi', 'inventoryquality') }}</h3></div>
+         <table class="table table-sm card-table">
+            <thead><tr><th>{{ __('Zaman', 'inventoryquality') }}</th><th>{{ __('İşlem', 'inventoryquality') }}</th><th>{{ __('Yapan', 'inventoryquality') }}</th><th>{{ __('Gerekçe', 'inventoryquality') }}</th></tr></thead>
+            <tbody>{% for a in audit %}<tr><td class="text-nowrap">{{ a.date }}</td><td>{{ a.action }}</td><td>{{ a.actor }}</td><td>{{ a.reason }}</td></tr>{% endfor %}</tbody>
+         </table>
+      </div>
+   </div>
+
+   <div class="col-lg-4">
+      <div class="card">
+         <div class="card-header"><h3 class="card-title">{{ __('İşlemler', 'inventoryquality') }}</h3></div>
+         <div class="card-body">
+            {% if can.decide %}
+               <form method="post" action="{{ self }}" class="mb-3">
+                  <input type="hidden" name="_glpi_csrf_token" value="{{ csrf_token() }}">
+                  <textarea class="form-control mb-2" name="comment" rows="2" placeholder="{{ __('Not (retde zorunlu)', 'inventoryquality') }}"></textarea>
+                  <div class="d-flex gap-2">
+                     <button class="btn btn-success flex-fill" name="approve" value="1"><i class="ti ti-check me-1"></i>{{ __('Onayla', 'inventoryquality') }}</button>
+                     <button class="btn btn-outline-danger flex-fill" name="reject" value="1"><i class="ti ti-x me-1"></i>{{ __('Reddet', 'inventoryquality') }}</button>
+                  </div>
+                  <div class="form-text">{{ __('Onay, verinin doğru olduğunun kanıtı değildir: uygulamadan sonra kayıt yeniden kontrol edilir.', 'inventoryquality') }}</div>
+               </form>
+            {% endif %}
+            {% if can.apply %}
+               <form method="post" action="{{ self }}" class="mb-3">
+                  <input type="hidden" name="_glpi_csrf_token" value="{{ csrf_token() }}">
+                  <button class="btn btn-primary w-100" name="apply" value="1"><i class="ti ti-player-play me-1"></i>{{ c.status == 'failed' ? __('Yeniden dene', 'inventoryquality') : __('Uygula', 'inventoryquality') }}</button>
+               </form>
+            {% endif %}
+            {% if can.cancel %}
+               <form method="post" action="{{ self }}" class="mb-3">
+                  <input type="hidden" name="_glpi_csrf_token" value="{{ csrf_token() }}">
+                  <button class="btn btn-outline-secondary w-100" name="cancel" value="1">{{ __('Öneriyi iptal et', 'inventoryquality') }}</button>
+               </form>
+            {% endif %}
+            {% if can.reassign %}
+               <form method="post" action="{{ self }}">
+                  <input type="hidden" name="_glpi_csrf_token" value="{{ csrf_token() }}">
+                  <label class="form-label">{{ __('Onaylayanı yeniden ata', 'inventoryquality') }}</label>
+                  <select class="form-select mb-2" name="step">{% for n in step_nums %}<option value="{{ n }}">{{ __('%d. adım', 'inventoryquality')|format(n) }}</option>{% endfor %}</select>
+                  <div class="mb-2">{{ dd_group|raw }}</div>
+                  <div class="mb-2">{{ dd_user|raw }}</div>
+                  <select class="form-select mb-2" name="mode"><option value="any">{{ __('Biri yeterli', 'inventoryquality') }}</option><option value="all">{{ __('Belirlenmiş herkes', 'inventoryquality') }}</option></select>
+                  <button class="btn btn-outline-secondary w-100" name="reassign" value="1">{{ __('Yeniden ata', 'inventoryquality') }}</button>
+                  <div class="form-text">{{ __('Yeniden atama işlem geçmişine yazılır.', 'inventoryquality') }}</div>
+               </form>
+            {% endif %}
+            {% if not (can.decide or can.apply or can.cancel or can.reassign) %}
+               <div class="text-secondary small">{{ __('Bu düzeltmede sizin için bekleyen işlem yok.', 'inventoryquality') }}</div>
+            {% endif %}
+         </div>
+      </div>
+   </div>
+</div>

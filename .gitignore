@@ -1,0 +1,6 @@
+# Dağıtım paketleri depoda tutulmaz (GitHub Releases'e eklenebilir)
+dist/
+*.tgz
+*.zip
+# Test çalıştırma artıkları
+tests/_cli_*.php

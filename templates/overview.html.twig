@@ -1,0 +1,141 @@
+{% include '@inventoryquality/nav.html.twig' %}
+
+{% if counts.waiting > 0 %}
+   <div class="alert alert-warning">
+      <i class="ti ti-user-question me-1"></i>
+      {{ __('%d bulgu sorumlu bulunamadığı için "Atama bekliyor" kuyruğunda.', 'inventoryquality')|format(counts.waiting) }}
+      <a href="{{ urls.waiting }}">{{ __('Listeyi aç', 'inventoryquality') }}</a>
+      {% if can_config %} · <a href="{{ base }}/config.php">{{ __('Birim veri kalitesi grubunu tanımla', 'inventoryquality') }}</a>{% endif %}
+   </div>
+{% endif %}
+{% if s3.mine > 0 %}
+   <div class="alert alert-info"><i class="ti ti-pencil-check me-1"></i>
+      {{ __('Onayınızı bekleyen %d düzeltme önerisi var.', 'inventoryquality')|format(s3.mine) }}
+      <a href="{{ base }}/correction.php?view=mine">{{ __('Aç', 'inventoryquality') }}</a></div>
+{% endif %}
+{% if suspended > 0 %}
+   <div class="alert alert-danger"><i class="ti ti-alert-octagon me-1"></i>
+      {{ __('%d kural yapılandırma sorunu nedeniyle askıda (alan bulunamadı ya da veri tipi değişti).', 'inventoryquality')|format(suspended) }}
+      <a href="{{ base }}/rule.php">{{ __('Kurallar', 'inventoryquality') }}</a>
+   </div>
+{% endif %}
+
+<div class="row g-3 mb-3">
+   <div class="col-sm-6 col-lg-3">
+      <div class="card card-sm h-100"><div class="card-body">
+         <div class="text-secondary small">{{ __('Kalite puanı', 'inventoryquality') }}</div>
+         <div class="h1 mb-1">{{ score_txt }}</div>
+         <div class="small text-secondary">{{ __('PASS ağırlığı / (PASS + FAIL ağırlığı)', 'inventoryquality') }}</div>
+         {% if score.low_coverage %}
+            <div class="small text-warning mt-1"><i class="ti ti-alert-triangle"></i>
+               {{ __('Kapsam düşük: bu puan genel sağlık göstergesi olarak yorumlanmamalı.', 'inventoryquality') }}</div>
+         {% endif %}
+      </div></div>
+   </div>
+   <div class="col-sm-6 col-lg-3">
+      <div class="card card-sm h-100"><div class="card-body">
+         <div class="text-secondary small">{{ __('Değerlendirme kapsamı', 'inventoryquality') }}</div>
+         <div class="h1 mb-1">{{ cov_txt }}</div>
+         <div class="small text-secondary">
+            {{ __('Değerlendirilemeyen: %d kontrol (ağırlık %d)', 'inventoryquality')|format(score.counts.UNKNOWN, score.unknown) }}
+         </div>
+      </div></div>
+   </div>
+   <div class="col-sm-6 col-lg-3">
+      <div class="card card-sm h-100"><div class="card-body">
+         <div class="text-secondary small">{{ __('Açık bulgu', 'inventoryquality') }}</div>
+         <div class="h1 mb-1"><a href="{{ urls.active }}">{{ counts.active }}</a></div>
+         <div class="small">
+            <a class="text-danger" href="{{ urls.overdue }}">{{ __('Gecikmiş: %d', 'inventoryquality')|format(counts.overdue) }}</a> ·
+            <a href="{{ urls.review }}">{{ __('İnceleme gerekli: %d', 'inventoryquality')|format(counts.review) }}</a>
+         </div>
+      </div></div>
+   </div>
+   <div class="col-sm-6 col-lg-3">
+      <div class="card card-sm h-100"><div class="card-body">
+         <div class="text-secondary small">{{ __('Çözülen / tekrar açılan / istisna', 'inventoryquality') }}</div>
+         <div class="h1 mb-1">{{ counts.resolved }} <span class="h3 text-secondary">/ {{ counts.reopened }} / {{ counts.exception }}</span></div>
+         <div class="small text-secondary">{{ __('Kapsam dışı: %d (çözüm sayılmaz)', 'inventoryquality')|format(counts.out_of_scope) }}</div>
+      </div></div>
+   </div>
+</div>
+
+<div class="row g-3">
+   <div class="col-lg-8">
+      <div class="card">
+         <div class="card-header"><h3 class="card-title">{{ __('Kural bazında', 'inventoryquality') }}</h3></div>
+         <div class="table-responsive">
+            <table class="table table-vcenter card-table table-sm">
+               <thead><tr>
+                  <th>{{ __('Kod', 'inventoryquality') }}</th><th>{{ __('Kural', 'inventoryquality') }}</th><th>{{ __('Sürüm', 'inventoryquality') }}</th>
+                  <th class="text-end">{{ __('Puan', 'inventoryquality') }}</th><th class="text-end">{{ __('Kapsam', 'inventoryquality') }}</th>
+                  <th class="text-end">{{ __('Uygun', 'inventoryquality') }}</th><th class="text-end">{{ __('Uygunsuz', 'inventoryquality') }}</th>
+                  <th class="text-end">{{ __('Bilinmiyor', 'inventoryquality') }}</th><th class="text-end">{{ __('Açık bulgu', 'inventoryquality') }}</th>
+               </tr></thead>
+               <tbody>
+               {% for r in by_rule %}
+                  <tr>
+                     <td><a href="{{ base }}/rule.form.php?id={{ r.rule.id }}">{{ r.rule.code }}</a></td>
+                     <td>{{ r.rule.name }}</td>
+                     <td>v{{ r.version }}</td>
+                     <td class="text-end">{{ r.score_txt }}</td>
+                     <td class="text-end">{{ r.cov_txt }}</td>
+                     <td class="text-end">{{ r.n.PASS|default(0) }}</td>
+                     <td class="text-end">{{ r.n.FAIL|default(0) }}</td>
+                     <td class="text-end">{{ r.n.UNKNOWN|default(0) }}</td>
+                     <td class="text-end"><a href="{{ r.url }}">{{ r.open }}</a></td>
+                  </tr>
+               {% else %}
+                  <tr><td colspan="9" class="text-secondary">{{ __('Henüz değerlendirme yok. Bir kural yayınlayıp etkinleştirin ve tarama başlatın.', 'inventoryquality') }}</td></tr>
+               {% endfor %}
+               </tbody>
+            </table>
+         </div>
+         <div class="card-footer small text-secondary">
+            {{ __('Son değerlendirme: %s', 'inventoryquality')|format(last_evaluated ?: '—') }} ·
+            {{ __('Kurum puanı ağırlıkların toplamından hesaplanır; ölçüm tanımlı kurallara uyumu gösterir, fiziksel gerçekliğin ya da mevzuat uyumunun tamamını kanıtlamaz.', 'inventoryquality') }}
+         </div>
+      </div>
+   </div>
+   <div class="col-lg-4">
+      <div class="card mb-3">
+         <div class="card-header"><h3 class="card-title">{{ __('Açık bulguların yaşı (gün)', 'inventoryquality') }}</h3></div>
+         <div class="card-body">
+            {% for label, n in ages %}
+               <div class="d-flex align-items-center mb-2">
+                  <div class="me-2" style="width:4rem">{{ label }}</div>
+                  <div class="progress flex-fill" style="height:.6rem"><div class="progress-bar bg-danger" style="width:{{ age_max > 0 ? (n * 100 / age_max)|round : 0 }}%"></div></div>
+                  <div class="ms-2 text-end" style="width:2.5rem">{{ n }}</div>
+               </div>
+            {% endfor %}
+         </div>
+      </div>
+      <div class="card mb-3">
+         <div class="card-header"><h3 class="card-title">{{ __('Düzeltmeler ve istisnalar', 'inventoryquality') }}</h3></div>
+         <div class="card-body small">
+            <div class="mb-1"><a href="{{ base }}/correction.php?view=all">{{ __('Sonuçlanmamış düzeltme önerisi', 'inventoryquality') }}</a>: <strong>{{ s3.pending }}</strong></div>
+            <div class="mb-1">{{ __('Uygulanamayan / çakışan', 'inventoryquality') }}: <strong class="{{ s3.problem > 0 ? 'text-danger' : '' }}">{{ s3.problem }}</strong></div>
+            <div class="mb-1"><a href="{{ base }}/exception.php">{{ __('Geçerli istisna', 'inventoryquality') }}</a>: <strong>{{ s3.exc_active }}</strong></div>
+            <div class="mb-1"><a href="{{ base }}/exception.php?status=expired">{{ __('Son 30 günde süresi dolan istisna', 'inventoryquality') }}</a>: <strong>{{ s3.exc_expired }}</strong></div>
+            {% if s3.can_export %}
+               <div class="mt-2"><a class="btn btn-sm btn-outline-secondary" href="{{ base }}/export.php?scope=active"><i class="ti ti-file-spreadsheet me-1"></i>{{ __('Açık bulgular (CSV)', 'inventoryquality') }}</a>
+                  <a class="btn btn-sm btn-outline-secondary" href="{{ base }}/export.php?scope=all">{{ __('Tüm bulgular (CSV)', 'inventoryquality') }}</a></div>
+            {% endif %}
+         </div>
+      </div>
+      <div class="card">
+         <div class="card-header"><h3 class="card-title">{{ __('Tarama sağlığı', 'inventoryquality') }}</h3></div>
+         <div class="card-body small">
+            <div class="mb-1">{{ __('Son tamamlanan tam tarama:', 'inventoryquality') }}
+               <strong>{{ last_full ? last_full.finished : __('yok', 'inventoryquality') }}</strong>
+               {% if last_full %}({{ __('%d kayıt', 'inventoryquality')|format(last_full.items) }}){% endif %}</div>
+            <div class="mb-1">{{ __('Süren tarama:', 'inventoryquality') }} <strong>{{ running }}</strong></div>
+            <div class="mb-1">{{ __('Kuyruk:', 'inventoryquality') }} {{ __('bekleyen %d · başarısız %d', 'inventoryquality')|format(jobs.pending, jobs.failed) }}</div>
+            {% for name, c in crons %}
+               <div class="mb-1">{{ name }}: {{ c ? __('son çalışma %s', 'inventoryquality')|format(c.lastrun ?: '—') : __('kayıtlı değil', 'inventoryquality') }}</div>
+            {% endfor %}
+            <a href="{{ base }}/jobs.php">{{ __('İşler ve taramalar', 'inventoryquality') }} →</a>
+         </div>
+      </div>
+   </div>
+</div>

@@ -1,0 +1,224 @@
+{% include '@inventoryquality/nav.html.twig' %}
+
+<div class="row g-3">
+   <div class="col-lg-8">
+      <div class="card mb-3">
+         <div class="card-header d-flex align-items-center gap-2">
+            <h3 class="card-title mb-0">{{ __('Bulgu', 'inventoryquality') }} #{{ f.id }}</h3>
+            {{ badge|raw }}
+            <span class="badge bg-secondary-lt">{{ severity }}</span>
+            {% if dates.overdue %}<span class="badge bg-danger">{{ __('Gecikmiş', 'inventoryquality') }}</span>{% endif %}
+         </div>
+         <div class="card-body">
+            <dl class="row mb-0">
+               <dt class="col-sm-3">{{ __('Varlık', 'inventoryquality') }}</dt>
+               <dd class="col-sm-9">{% if asset.url %}<a href="{{ asset.url }}">{{ asset.label }}</a>{% else %}{{ asset.label }}{% endif %} <span class="text-secondary">({{ asset.type }} · {{ entity }})</span></dd>
+               <dt class="col-sm-3">{{ __('Kural', 'inventoryquality') }}</dt>
+               <dd class="col-sm-9"><a href="{{ base }}/rule.form.php?id={{ rule.id }}">{{ rule.code }} · {{ rule.name }}</a> <span class="text-secondary">v{{ version }}</span></dd>
+               <dt class="col-sm-3">{{ __('Beklenen durum', 'inventoryquality') }}</dt>
+               <dd class="col-sm-9">{{ expected }}</dd>
+               <dt class="col-sm-3">{{ __('Mevcut durum', 'inventoryquality') }}</dt>
+               <dd class="col-sm-9">
+                  {% for o in observed %}<div><span class="text-secondary">{{ o.label }}:</span> {{ o.value }}</div>{% endfor %}
+                  {% if eval %}<div class="small text-secondary mt-1">{{ __('Son kontrol', 'inventoryquality') }}: {{ eval.date }} {{ eval.badge|raw }}{% if eval.error %} · {{ eval.error }}{% endif %}</div>{% endif %}
+               </dd>
+               {% if f.status_reason %}
+                  <dt class="col-sm-3">{{ __('Durum nedeni', 'inventoryquality') }}</dt>
+                  <dd class="col-sm-9">{{ f.status_reason }}</dd>
+               {% endif %}
+               <dt class="col-sm-3">{{ __('Sorumlu', 'inventoryquality') }}</dt>
+               <dd class="col-sm-9">
+                  {% if assign.waiting %}
+                     <span class="badge bg-orange-lt">{{ __('Atama bekliyor', 'inventoryquality') }}</span>
+                  {% else %}
+                     {{ assign.group }}{% if assign.group and assign.user %} · {% endif %}{{ assign.user }}
+                     <span class="text-secondary">({{ assign.reason }})</span>
+                  {% endif %}
+               </dd>
+               <dt class="col-sm-3">{{ __('Tarihler', 'inventoryquality') }}</dt>
+               <dd class="col-sm-9 small">
+                  {{ __('İlk görülme', 'inventoryquality') }}: {{ dates.first }} · {{ __('Son görülme', 'inventoryquality') }}: {{ dates.last }}
+                  · {{ __('Tekrar', 'inventoryquality') }}: {{ f.seen_count }} · {{ __('Dönem', 'inventoryquality') }}: {{ f.cycle }}
+                  · {{ __('Hedef tarih', 'inventoryquality') }}: {{ dates.due }}
+               </dd>
+            </dl>
+            {% if help %}<div class="small text-secondary mt-2"><i class="ti ti-info-circle"></i> {{ help }}</div>{% endif %}
+         </div>
+      </div>
+
+      <div class="card mb-3">
+         <div class="card-header"><h3 class="card-title">{{ __('Dönemler', 'inventoryquality') }}</h3></div>
+         <table class="table table-sm card-table">
+            <thead><tr><th>#</th><th>{{ __('Açılış', 'inventoryquality') }}</th><th>{{ __('Kapanış', 'inventoryquality') }}</th><th>{{ __('Sonuç', 'inventoryquality') }}</th><th>{{ __('Neden', 'inventoryquality') }}</th></tr></thead>
+            <tbody>
+            {% for c in cycles %}
+               <tr><td>{{ c.cycle }}</td><td>{{ c.opened }}</td><td>{{ c.closed ?: '—' }}</td><td>{{ c.status_label ?: __('Açık', 'inventoryquality') }}</td><td>{{ c.close_reason }}</td></tr>
+            {% endfor %}
+            </tbody>
+         </table>
+      </div>
+
+      <div class="card mb-3">
+         <div class="card-header"><h3 class="card-title">{{ __('Düzeltme önerileri', 'inventoryquality') }}</h3></div>
+         <table class="table table-sm card-table">
+            <thead><tr><th>#</th><th>{{ __('Değişiklik', 'inventoryquality') }}</th><th>{{ __('Öneren', 'inventoryquality') }}</th><th>{{ __('Tarih', 'inventoryquality') }}</th><th>{{ __('Durum', 'inventoryquality') }}</th></tr></thead>
+            <tbody>
+            {% for c in corrections %}
+               <tr><td><a href="{{ base }}/correction.form.php?id={{ c.id }}">{{ c.id }}</a></td><td>{{ c.change }}</td><td>{{ c.user }}</td><td class="text-nowrap">{{ c.date }}</td><td>{{ c.status }}</td></tr>
+            {% else %}
+               <tr><td colspan="5" class="text-secondary">{{ __('Bu bulgu için düzeltme önerisi yok.', 'inventoryquality') }}</td></tr>
+            {% endfor %}
+            </tbody>
+         </table>
+      </div>
+
+      <div class="card mb-3">
+         <div class="card-header"><h3 class="card-title">{{ __('Destek kayıtları', 'inventoryquality') }}</h3></div>
+         <table class="table table-sm card-table">
+            <thead><tr><th>{{ __('Kayıt', 'inventoryquality') }}</th><th>{{ __('Durum', 'inventoryquality') }}</th><th>{{ __('Dönem', 'inventoryquality') }}</th><th>{{ __('Bağlantı', 'inventoryquality') }}</th><th>{{ __('Not', 'inventoryquality') }}</th></tr></thead>
+            <tbody>
+            {% for t in tickets %}
+               <tr>
+                  <td>{% if t.url %}<a href="{{ t.url }}">#{{ t.id }} {{ t.name }}</a>{% else %}#{{ t.id }} {{ t.name }}{% endif %}</td>
+                  <td>{{ t.status }}</td><td>{{ t.cycle }}</td>
+                  <td>{{ t.open ? __('Açık', 'inventoryquality') : __('Kapalı', 'inventoryquality') }}</td><td>{{ t.note }}</td>
+               </tr>
+            {% else %}
+               <tr><td colspan="5" class="text-secondary">{{ __('Bağlı destek kaydı yok (birimde "yalnız bulgu" modu, kuralda kayıt kapalı ya da atama bekliyor).', 'inventoryquality') }}</td></tr>
+            {% endfor %}
+            </tbody>
+         </table>
+      </div>
+
+      <div class="card">
+         <div class="card-header"><h3 class="card-title">{{ __('İşlem geçmişi', 'inventoryquality') }}</h3></div>
+         <table class="table table-sm card-table">
+            <thead><tr><th>{{ __('Zaman', 'inventoryquality') }}</th><th>{{ __('İşlem', 'inventoryquality') }}</th><th>{{ __('Yapan', 'inventoryquality') }}</th><th>{{ __('Gerekçe', 'inventoryquality') }}</th></tr></thead>
+            <tbody>
+            {% for a in audit %}<tr><td class="text-nowrap">{{ a.date }}</td><td>{{ a.action }}</td><td>{{ a.actor }}</td><td>{{ a.reason }}</td></tr>{% endfor %}
+            </tbody>
+         </table>
+      </div>
+   </div>
+
+   <div class="col-lg-4">
+      <div class="card">
+         <div class="card-header"><h3 class="card-title">{{ __('İşlemler', 'inventoryquality') }}</h3></div>
+         <div class="card-body">
+            {% if can.recheck %}
+               <form method="post" action="{{ self }}" class="mb-2">
+                  <input type="hidden" name="_glpi_csrf_token" value="{{ csrf_token() }}">
+                  <button class="btn btn-outline-primary w-100" name="recheck" value="1"><i class="ti ti-refresh me-1"></i>{{ __('Yeniden kontrol et', 'inventoryquality') }}</button>
+               </form>
+            {% endif %}
+            {% if can.take %}
+               <form method="post" action="{{ self }}" class="mb-2">
+                  <input type="hidden" name="_glpi_csrf_token" value="{{ csrf_token() }}">
+                  <button class="btn btn-outline-secondary w-100" name="take" value="1"><i class="ti ti-hand-grab me-1"></i>{{ __('Üstlen (İşlemde)', 'inventoryquality') }}</button>
+               </form>
+            {% endif %}
+            {% if can.fixed %}
+               <form method="post" action="{{ self }}" class="mb-3">
+                  <input type="hidden" name="_glpi_csrf_token" value="{{ csrf_token() }}">
+                  <textarea class="form-control mb-2" name="note" rows="2" maxlength="255" placeholder="{{ __('Ne düzeltildi? (isteğe bağlı)', 'inventoryquality') }}"></textarea>
+                  <button class="btn btn-primary w-100" name="mark_fixed" value="1"><i class="ti ti-check me-1"></i>{{ __('Düzelttim, doğrula', 'inventoryquality') }}</button>
+                  <div class="form-text">{{ __('Beyan tek başına bulguyu çözmez: kayıt hemen yeniden kontrol edilir; kural sağlanıyorsa çözülür.', 'inventoryquality') }}</div>
+               </form>
+            {% endif %}
+            {% if can.assign %}
+               <form method="post" action="{{ self }}">
+                  <input type="hidden" name="_glpi_csrf_token" value="{{ csrf_token() }}">
+                  <label class="form-label">{{ __('Sorumlu grup', 'inventoryquality') }}</label>
+                  <div class="mb-2">{{ dd_group|raw }}</div>
+                  <label class="form-label">{{ __('Sorumlu kişi', 'inventoryquality') }}</label>
+                  <div class="mb-2">{{ dd_user|raw }}</div>
+                  <button class="btn btn-outline-secondary w-100" name="assign" value="1"><i class="ti ti-user-check me-1"></i>{{ __('Ata', 'inventoryquality') }}</button>
+                  <div class="form-text">{{ __('Aktiflik, grup uygunluğu ve birim yetkisi doğrulanır; pasif kullanıcı atanamaz.', 'inventoryquality') }}</div>
+               </form>
+            {% endif %}
+         </div>
+      </div>
+
+      {% if propose %}
+      <div class="card mt-3" id="iq-propose">
+         <div class="card-header"><h3 class="card-title"><i class="ti ti-pencil me-1"></i>{{ __('Düzeltme öner', 'inventoryquality') }}</h3></div>
+         <div class="card-body">
+            <form method="post" action="{{ self }}" enctype="multipart/form-data">
+               <input type="hidden" name="_glpi_csrf_token" value="{{ csrf_token() }}">
+               <input type="hidden" name="field" value="{{ propose.field }}">
+               <div class="mb-2"><span class="text-secondary">{{ propose.label }} — {{ __('mevcut değer', 'inventoryquality') }}:</span> <strong>{{ propose.current }}</strong>
+                  <div class="small text-secondary">{{ __('okunma zamanı', 'inventoryquality') }}: {{ propose.read_at }}</div></div>
+               <label class="form-label">{{ __('Önerilen değer', 'inventoryquality') }}</label>
+               <div class="mb-2">{{ propose.widget|raw }}</div>
+               <label class="form-label">{{ __('Gerekçe (zorunlu)', 'inventoryquality') }}</label>
+               <textarea class="form-control mb-2" name="reason" rows="2" required maxlength="4000"></textarea>
+               <label class="form-label">{{ __('Kanıt eki (isteğe bağlı)', 'inventoryquality') }}</label>
+               <input type="file" class="form-control mb-1" name="evidence" accept=".pdf,.png,.jpg,.jpeg,.txt">
+               <div class="form-text mb-2">{{ __('%s; en fazla %d MB. Parola ya da gereksiz kişisel bilgi eklemeyin.', 'inventoryquality')|format(propose.types, propose.max_mb) }}</div>
+               <div class="small mb-2"><span class="text-secondary">{{ __('Onay politikası (kuraldan gelir)', 'inventoryquality') }}:</span> {{ propose.policy }}</div>
+               <button class="btn btn-primary w-100" name="propose" value="1"><i class="ti ti-send me-1"></i>{{ propose.direct ? __('Doğrula ve uygula', 'inventoryquality') : __('Öneriyi gönder', 'inventoryquality') }}</button>
+               <div class="form-text">{{ __('Uygulamadan önce değer, varlığın birimi ve kural sürümü yeniden kontrol edilir; değer değişmişse çakışma verilir. Bulgu, kayıt yeniden kontrol edilip kural sağlanınca çözülür.', 'inventoryquality') }}</div>
+            </form>
+         </div>
+      </div>
+      {% elseif no_correction_reason %}
+      <div class="alert alert-info mt-3 small">{{ no_correction_reason }}</div>
+      {% endif %}
+
+      {% if attest %}
+      <div class="card mt-3" id="iq-attest">
+         <div class="card-header"><h3 class="card-title"><i class="ti ti-rosette-discount-check me-1"></i>{{ __('İş sahibi teyidi', 'inventoryquality') }}</h3></div>
+         <div class="card-body">
+            <form method="post" action="{{ self }}">
+               <input type="hidden" name="_glpi_csrf_token" value="{{ csrf_token() }}">
+               <div class="small text-secondary mb-2">{{ __('Aşağıdaki bilgileri kontrol edin; doğruysa teyit edin (periyot: %d gün).', 'inventoryquality')|format(attest.days) }}</div>
+               {% for x in attest.fields %}
+                  <label class="form-check"><input class="form-check-input" type="checkbox" name="attest_fields[]" value="{{ x.key }}" checked>
+                     <span class="form-check-label">{{ x.label }}: <strong>{{ x.value }}</strong></span></label>
+               {% endfor %}
+               <textarea class="form-control my-2" name="attest_comment" rows="2" placeholder="{{ __('Not (isteğe bağlı)', 'inventoryquality') }}"></textarea>
+               <button class="btn btn-success w-100" name="attest" value="1"><i class="ti ti-check me-1"></i>{{ __('Bilgiler doğru, teyit ediyorum', 'inventoryquality') }}</button>
+               <div class="form-text">{{ __('Bilgiler yanlışsa teyit etmeyin; önce düzeltin.', 'inventoryquality') }}</div>
+            </form>
+         </div>
+      </div>
+      {% endif %}
+
+      {% if exception %}
+      <div class="card mt-3">
+         <div class="card-header"><h3 class="card-title"><i class="ti ti-clock-pause me-1"></i>{{ __('Geçerli istisna', 'inventoryquality') }}</h3></div>
+         <div class="card-body small">
+            <div><span class="text-secondary">{{ __('Bitiş', 'inventoryquality') }}:</span> {{ exception.end }}</div>
+            <div><span class="text-secondary">{{ __('Onaylayan', 'inventoryquality') }}:</span> {{ exception.by }}</div>
+            <div><span class="text-secondary">{{ __('Gerekçe', 'inventoryquality') }}:</span> {{ exception.reason }}</div>
+            {% if exception.compensating %}<div><span class="text-secondary">{{ __('Telafi edici işlem', 'inventoryquality') }}:</span> {{ exception.compensating }}</div>{% endif %}
+            <div class="text-secondary mt-1">{{ __('İstisna sorunu çözmez; puanda uygunsuz sayılmaya devam eder.', 'inventoryquality') }}</div>
+            {% if can_revoke %}
+               <form method="post" action="{{ self }}" class="mt-2">
+                  <input type="hidden" name="_glpi_csrf_token" value="{{ csrf_token() }}">
+                  <input class="form-control form-control-sm mb-2" name="revoke_reason" placeholder="{{ __('Geri alma nedeni', 'inventoryquality') }}">
+                  <button class="btn btn-sm btn-outline-danger w-100" name="revoke_exception" value="{{ exception.id }}">{{ __('İstisnayı geri al', 'inventoryquality') }}</button>
+               </form>
+            {% endif %}
+         </div>
+      </div>
+      {% elseif can_exception %}
+      <div class="card mt-3">
+         <div class="card-header"><h3 class="card-title"><i class="ti ti-clock-pause me-1"></i>{{ __('İstisna ver', 'inventoryquality') }}</h3></div>
+         <div class="card-body">
+            <form method="post" action="{{ self }}">
+               <input type="hidden" name="_glpi_csrf_token" value="{{ csrf_token() }}">
+               <label class="form-label">{{ __('Gerekçe (zorunlu)', 'inventoryquality') }}</label>
+               <textarea class="form-control mb-2" name="ex_reason" rows="2" required></textarea>
+               <label class="form-label">{{ __('Bitiş tarihi (zorunlu)', 'inventoryquality') }}</label>
+               <input type="date" class="form-control mb-2" name="ex_end" min="{{ ex_min }}" max="{{ ex_max }}" required>
+               <label class="form-label">{{ __('Telafi edici işlem', 'inventoryquality') }}</label>
+               <textarea class="form-control mb-2" name="ex_comp" rows="2"></textarea>
+               <button class="btn btn-outline-secondary w-100" name="grant_exception" value="1">{{ __('İstisna ver', 'inventoryquality') }}</button>
+               <div class="form-text">{{ __('İstisna sorunu çözmez. Süre dolunca kayıt yeniden kontrol edilir: uygunsuzsa Açık, uygunsa Çözüldü, okunamıyorsa İnceleme gerekli.', 'inventoryquality') }}</div>
+            </form>
+         </div>
+      </div>
+      {% endif %}
+   </div>
+</div>

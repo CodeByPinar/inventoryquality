@@ -1,0 +1,41 @@
+{% include '@inventoryquality/nav.html.twig' %}
+
+{% if can_create %}
+<details class="card mb-3" {{ open_new ? 'open' : '' }}>
+   <summary class="card-header" style="cursor:pointer"><h3 class="card-title mb-0"><i class="ti ti-plus me-1"></i>{{ __('Şablondan yeni kural', 'inventoryquality') }}</h3></summary>
+   <div class="card-body">
+      <form method="post" action="{{ self }}">
+         <input type="hidden" name="_glpi_csrf_token" value="{{ csrf_token() }}">
+         <div class="row g-3">
+            <div class="col-lg-6">
+               <label class="form-label">{{ __('Şablon', 'inventoryquality') }}</label>
+               {% for key, t in templates %}
+                  <label class="form-check mb-2">
+                     <input class="form-check-input iq-tpl" type="radio" name="template" value="{{ key }}" {{ loop.first ? 'checked' : '' }} data-code="{{ t.suggest }}" data-label="{{ t.label }}">
+                     <span class="form-check-label"><strong>{{ t.code }} · {{ t.label }}</strong><br><span class="small text-secondary">{{ t.help }}</span></span>
+                  </label>
+               {% endfor %}
+            </div>
+            <div class="col-lg-6">
+               {% set first = templates|first %}
+               <label class="form-label">{{ __('Kod (değişmez, tekil)', 'inventoryquality') }}</label>
+               <input class="form-control mb-2" name="code" maxlength="32" required value="{{ first.suggest }}">
+               <label class="form-label">{{ __('Ad', 'inventoryquality') }}</label>
+               <input class="form-control mb-2" name="name" maxlength="255" value="{{ first.label }}">
+               <label class="form-label">{{ __('Varlık tipi', 'inventoryquality') }}</label>
+               <select class="form-select mb-1" name="itemtype">
+                  {% for k, l in types %}<option value="{{ k }}">{{ l }}</option>{% endfor %}
+               </select>
+               {% if candidates %}<div class="form-text mb-2">{{ __('Henüz doğrulanmadı (sonraki sürüm): %s', 'inventoryquality')|format(candidates|join(', ')) }}</div>{% endif %}
+               <label class="form-label">{{ __('Kurum birimi', 'inventoryquality') }}</label>
+               <div class="mb-2">{{ dd_entity|raw }}</div>
+               <label class="form-check mb-3"><input class="form-check-input" type="checkbox" name="is_recursive" value="1" checked>
+                  <span class="form-check-label">{{ __('Alt birimlere de uygula', 'inventoryquality') }}</span></label>
+               <button class="btn btn-primary" name="create" value="1"><i class="ti ti-plus me-1"></i>{{ __('Kuralı oluştur', 'inventoryquality') }}</button>
+               <div class="form-text">{{ __('Kural pasif oluşur. Tanımı doldurun, örnek verilerle önizleyin, sonra yayınlayıp etkinleştirin.', 'inventoryquality') }}</div>
+            </div>
+         </div>
+      </form>
+   </div>
+</details>
+{% endif %}

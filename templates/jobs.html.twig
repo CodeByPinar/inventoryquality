@@ -1,0 +1,71 @@
+{% include '@inventoryquality/nav.html.twig' %}
+
+{% if can_scan %}
+<form method="post" action="{{ self }}" class="d-flex flex-wrap gap-2 mb-3">
+   <input type="hidden" name="_glpi_csrf_token" value="{{ csrf_token() }}">
+   <button class="btn btn-primary" name="start_full" value="1"><i class="ti ti-player-play me-1"></i>{{ __('Tam tarama başlat', 'inventoryquality') }}</button>
+   <button class="btn btn-outline-secondary" name="process" value="1"><i class="ti ti-refresh me-1"></i>{{ __('Kuyruğu şimdi işle', 'inventoryquality') }}</button>
+   <span class="align-self-center small text-secondary">{{ __('Her çalışma en fazla ~40 sn sürer; kalan kısım otomatik görevle devam eder.', 'inventoryquality') }}</span>
+</form>
+{% endif %}
+
+<div class="card mb-3">
+   <div class="card-header"><h3 class="card-title">{{ __('Taramalar', 'inventoryquality') }}</h3></div>
+   <div class="table-responsive">
+   <table class="table table-sm card-table table-vcenter">
+      <thead><tr>
+         <th>#</th><th>{{ __('Tür', 'inventoryquality') }}</th><th>{{ __('Durum', 'inventoryquality') }}</th><th>{{ __('Başlangıç', 'inventoryquality') }}</th><th>{{ __('Bitiş', 'inventoryquality') }}</th>
+         <th class="text-end">{{ __('Kayıt', 'inventoryquality') }}</th><th class="text-end">{{ __('Uygun', 'inventoryquality') }}</th><th class="text-end">{{ __('Uygunsuz', 'inventoryquality') }}</th>
+         <th class="text-end">{{ __('Bilinmiyor', 'inventoryquality') }}</th><th class="text-end">{{ __('Uygulanmaz', 'inventoryquality') }}</th><th class="text-end">{{ __('Hata', 'inventoryquality') }}</th>
+         <th>{{ __('Kural', 'inventoryquality') }}</th><th>{{ __('Başlatan', 'inventoryquality') }}</th><th>{{ __('Not', 'inventoryquality') }}</th>
+      </tr></thead>
+      <tbody>
+      {% for s in scans %}
+         <tr>
+            <td>{{ s.id }}</td><td>{{ s.kind }}</td><td>{{ s.badge|raw }}</td><td class="text-nowrap">{{ s.started }}</td><td class="text-nowrap">{{ s.finished ?: '—' }}</td>
+            <td class="text-end">{{ s.items_seen }}</td><td class="text-end">{{ s.n_pass }}</td><td class="text-end">{{ s.n_fail }}</td>
+            <td class="text-end">{{ s.n_unknown }}</td><td class="text-end">{{ s.n_na }}</td><td class="text-end">{{ s.n_errors }}</td>
+            <td>{{ s.n_rules }}</td><td>{{ s.actor_label }}</td>
+            <td class="small">{% if s.status == 'running' %}{{ __('kaldığı yer: %s #%d', 'inventoryquality')|format(s.cursor_itemtype ?: '—', s.cursor_id) }}{% endif %} {{ s.message }}</td>
+         </tr>
+      {% else %}<tr><td colspan="14" class="text-secondary">{{ __('Henüz tarama yok.', 'inventoryquality') }}</td></tr>{% endfor %}
+      </tbody>
+   </table>
+   </div>
+</div>
+
+<div class="row g-3">
+   <div class="col-lg-8">
+      <div class="card">
+         <div class="card-header"><h3 class="card-title">{{ __('İş kuyruğu', 'inventoryquality') }}</h3>
+            <div class="card-actions small">{{ __('bekleyen %d · çalışan %d · biten %d · başarısız %d', 'inventoryquality')|format(stats.pending, stats.running, stats.done, stats.failed) }}</div></div>
+         <table class="table table-sm card-table">
+            <thead><tr><th>{{ __('İş', 'inventoryquality') }}</th><th>{{ __('Durum', 'inventoryquality') }}</th><th>{{ __('Deneme', 'inventoryquality') }}</th><th>{{ __('Sonraki deneme', 'inventoryquality') }}</th><th>{{ __('Son hata', 'inventoryquality') }}</th><th></th></tr></thead>
+            <tbody>
+            {% for j in jobs %}
+               <tr>
+                  <td class="small">{{ j.job_key }}</td><td>{{ j.status }}</td><td>{{ j.attempts }}</td><td class="text-nowrap">{{ j.next }}</td><td class="small">{{ j.last_error }}</td>
+                  <td>{% if can_scan and j.status == 'failed' %}
+                     <form method="post" action="{{ self }}"><input type="hidden" name="_glpi_csrf_token" value="{{ csrf_token() }}">
+                        <button class="btn btn-sm btn-outline-secondary" name="retry" value="{{ j.id }}">{{ __('Yeniden dene', 'inventoryquality') }}</button></form>
+                  {% endif %}</td>
+               </tr>
+            {% else %}<tr><td colspan="6" class="text-secondary">{{ __('Bekleyen ya da başarısız iş yok.', 'inventoryquality') }}</td></tr>{% endfor %}
+            </tbody>
+         </table>
+      </div>
+   </div>
+   <div class="col-lg-4">
+      <div class="card">
+         <div class="card-header"><h3 class="card-title">{{ __('Otomatik görevler', 'inventoryquality') }}</h3></div>
+         <div class="card-body small">
+            {% for c in crons %}
+               <div class="mb-2"><strong>{% if c.url %}<a href="{{ c.url }}">{{ c.name }}</a>{% else %}{{ c.name }}{% endif %}</strong> — {{ c.info }}<br>
+                  {% if c.c %}{{ c.mode }} · {{ __('son çalışma', 'inventoryquality') }}: {{ c.last ?: '—' }}{% else %}<span class="text-danger">{{ __('kayıtlı değil — eklentiyi yeniden kurun', 'inventoryquality') }}</span>{% endif %}</div>
+            {% endfor %}
+            <div class="text-secondary">{{ __('Görevler harici modda çalışır; sunucuda şu cron satırı gerekir:', 'inventoryquality') }}<br>
+               <code>* * * * * www-data /usr/bin/php /var/www/glpi/front/cron.php</code></div>
+         </div>
+      </div>
+   </div>
+</div>

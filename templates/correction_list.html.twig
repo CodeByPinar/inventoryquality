@@ -1,0 +1,29 @@
+{% include '@inventoryquality/nav.html.twig' %}
+
+<ul class="nav nav-tabs mb-3">
+   <li class="nav-item"><a class="nav-link {{ view == 'mine' ? 'active' : '' }}" href="{{ self }}?view=mine">{{ __('Onayımı bekleyenler', 'inventoryquality') }} <span class="badge bg-primary-lt">{{ count_mine }}</span></a></li>
+   <li class="nav-item"><a class="nav-link {{ view == 'requested' ? 'active' : '' }}" href="{{ self }}?view=requested">{{ __('Taleplerim', 'inventoryquality') }}</a></li>
+   <li class="nav-item"><a class="nav-link {{ view == 'all' ? 'active' : '' }}" href="{{ self }}?view=all">{{ __('Tümü', 'inventoryquality') }}</a></li>
+</ul>
+
+<div class="card">
+   <div class="table-responsive">
+   <table class="table table-sm card-table table-vcenter">
+      <thead><tr><th>#</th><th>{{ __('Varlık', 'inventoryquality') }}</th><th>{{ __('Kural', 'inventoryquality') }}</th><th>{{ __('Değişiklik', 'inventoryquality') }}</th>
+         <th>{{ __('Öneren', 'inventoryquality') }}</th><th>{{ __('Tarih', 'inventoryquality') }}</th><th>{{ __('Durum', 'inventoryquality') }}</th></tr></thead>
+      <tbody>
+      {% for c in list %}
+         <tr>
+            <td><a href="{{ base }}/correction.form.php?id={{ c.id }}">{{ c.id }}</a></td>
+            <td>{% if c.asset_url %}<a href="{{ c.asset_url }}">{{ c.asset }}</a>{% else %}{{ c.asset }}{% endif %}</td>
+            <td><a href="{{ base }}/finding.form.php?id={{ c.findings_id }}">{{ c.rule }}</a></td>
+            <td>{{ c.change }}</td><td>{{ c.user }}</td><td class="text-nowrap">{{ c.date }}</td>
+            <td><span class="badge {{ c.raw_status in ['applied'] ? 'bg-success-lt' : (c.raw_status in ['rejected','conflict','failed'] ? 'bg-danger-lt' : (c.raw_status == 'review' ? 'bg-orange-lt' : 'bg-azure-lt')) }}">{{ c.status }}</span></td>
+         </tr>
+      {% else %}
+         <tr><td colspan="7" class="text-secondary">{{ view == 'mine' ? __('Onayınızı bekleyen düzeltme yok.', 'inventoryquality') : __('Kayıt yok.', 'inventoryquality') }}</td></tr>
+      {% endfor %}
+      </tbody>
+   </table>
+   </div>
+</div>

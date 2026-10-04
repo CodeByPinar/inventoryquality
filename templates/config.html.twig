@@ -1,0 +1,102 @@
+{% include '@inventoryquality/nav.html.twig' %}
+
+<div class="row g-3">
+   <div class="col-lg-7">
+      <div class="card mb-3">
+         <div class="card-header"><h3 class="card-title">{{ __('Kurum birimi ayarları', 'inventoryquality') }}</h3></div>
+         <div class="card-body">
+            <form method="get" action="{{ self }}" class="mb-3">
+               <label class="form-label">{{ __('Birim', 'inventoryquality') }}</label>
+               {{ dd_entity|raw }}
+            </form>
+            <div class="small text-secondary mb-3">
+               {% if own %}{{ __('Bu birimin kendi ayarı var.', 'inventoryquality') }}{% else %}{{ __('Bu birim ayarlarını şuradan devralıyor: %s', 'inventoryquality')|format(source) }}{% endif %}
+            </div>
+            <form method="post" action="{{ self }}">
+               <input type="hidden" name="_glpi_csrf_token" value="{{ csrf_token() }}">
+               <input type="hidden" name="entities_id" value="{{ eid }}">
+               <div class="row g-3">
+                  <div class="col-md-6">
+                     <label class="form-label">{{ __('"Envanter Veri Kalitesi" destek grubu', 'inventoryquality') }}</label>
+                     {{ dd_group|raw }}
+                     <div class="form-text">{{ __('Kuralda ve varlıkta sorumlu yoksa iş bu gruba gider; o da yoksa "Atama bekliyor".', 'inventoryquality') }}</div>
+                  </div>
+                  <div class="col-md-6">
+                     <label class="form-label">{{ __('Destek kaydı', 'inventoryquality') }}</label>
+                     <select class="form-select" name="ticket_mode">
+                        <option value="off" {{ eff.ticket_mode == 'off' ? 'selected' : '' }}>{{ __('Yalnız bulgu (kayıt açma)', 'inventoryquality') }}</option>
+                        <option value="grouped" {{ eff.ticket_mode == 'grouped' ? 'selected' : '' }}>{{ __('Aç: varlık + sorumlu başına tek kayıt', 'inventoryquality') }}</option>
+                     </select>
+                     <div class="form-text">{{ __('Önerilen: ilk taramada yalnız bulgu ile hacmi görün, sonra kayıt üretimini açın.', 'inventoryquality') }}</div>
+                  </div>
+                  <div class="col-md-6">
+                     <label class="form-label">{{ __('Talep sahibi (servis kimliği)', 'inventoryquality') }}</label>
+                     {{ dd_user|raw }}
+                  </div>
+                  <div class="col-md-6">
+                     <label class="form-label">{{ __('Varsayılan hedef süre (gün)', 'inventoryquality') }}</label>
+                     <input type="number" class="form-control" name="due_days" min="1" max="365" value="{{ eff.due_days }}">
+                  </div>
+                  <div class="col-12">
+                     <div class="form-text">{{ __('Kapatılan kayıt politikası: bulgu çözülmeden kapatılan kaydın bağlantısı saklanır ve yeni takip kaydı açılır.', 'inventoryquality') }}</div>
+                  </div>
+               </div>
+               <div class="d-flex gap-2 mt-3">
+                  <button class="btn btn-primary" name="save_entity" value="1">{{ __('Kaydet', 'inventoryquality') }}</button>
+                  {% if own and eid > 0 %}<button class="btn btn-outline-secondary" name="inherit_entity" value="1">{{ __('Üst birimden devral', 'inventoryquality') }}</button>{% endif %}
+               </div>
+            </form>
+         </div>
+      </div>
+
+      <div class="card">
+         <div class="card-header"><h3 class="card-title">{{ __('Alan kataloğu', 'inventoryquality') }}</h3>
+            <div class="card-actions">
+               <form method="post" action="{{ self }}"><input type="hidden" name="_glpi_csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="entities_id" value="{{ eid }}">
+                  <button class="btn btn-sm btn-outline-secondary" name="sync_catalog" value="1"><i class="ti ti-refresh me-1"></i>{{ __('Kataloğu yenile', 'inventoryquality') }}</button></form>
+            </div>
+         </div>
+         <div class="card-body small pb-0">
+            {{ __('Doğrulanmış varlık tipleri: %s.', 'inventoryquality')|format(types|join(', ')) }}
+            {% if candidates %}{{ __('Henüz doğrulanmadı: %s.', 'inventoryquality')|format(candidates|join(', ')) }}{% endif %}
+            {{ __('Anahtar kararlıdır: etiket değişse de kural bozulmaz; alan kaybolur ya da veri tipi değişirse kural askıya alınır.', 'inventoryquality') }}
+         </div>
+         <div class="table-responsive">
+         <table class="table table-sm card-table">
+            <thead><tr><th>{{ __('Tip', 'inventoryquality') }}</th><th>{{ __('Anahtar', 'inventoryquality') }}</th><th>{{ __('Etiket', 'inventoryquality') }}</th><th>{{ __('Veri tipi', 'inventoryquality') }}</th><th>{{ __('Okuma / yazma', 'inventoryquality') }}</th><th>{{ __('Geçerli', 'inventoryquality') }}</th></tr></thead>
+            <tbody>
+            {% for f in catalog %}
+               <tr class="{{ f.is_valid ? '' : 'text-danger' }}"><td>{{ f.type_label }}</td><td><code>{{ f.field_key }}</code></td><td>{{ f.label }}</td><td>{{ f.datatype }}</td><td>{{ f.capabilities }}</td><td>{{ f.is_valid ? '✓' : __('kayıp', 'inventoryquality') }}</td></tr>
+            {% endfor %}
+            </tbody>
+         </table>
+         </div>
+      </div>
+   </div>
+
+   <div class="col-lg-5">
+      <div class="card">
+         <div class="card-header"><h3 class="card-title">{{ __('Genel ayarlar', 'inventoryquality') }}</h3></div>
+         <div class="card-body">
+            <form method="post" action="{{ self }}">
+               <input type="hidden" name="_glpi_csrf_token" value="{{ csrf_token() }}">
+               <input type="hidden" name="entities_id" value="{{ eid }}">
+               {% set labels = {
+                  'batch_size': __('Tarama partisi (kayıt)', 'inventoryquality'),
+                  'scan_budget_sec': __('Tarama zaman bütçesi (sn / çalışma)', 'inventoryquality'),
+                  'queue_budget_sec': __('Olay kuyruğu zaman bütçesi (sn / çalışma)', 'inventoryquality'),
+                  'job_max_attempts': __('Başarısız iş en fazla deneme', 'inventoryquality'),
+                  'preview_limit': __('Önizlemede örnek kayıt', 'inventoryquality'),
+                  'low_coverage_pct': __('Düşük kapsam eşiği (%)', 'inventoryquality')
+               } %}
+               {% for k, v in global %}
+                  <label class="form-label">{{ labels[k] ?? k }}</label>
+                  <input type="number" class="form-control mb-2" name="{{ k }}" min="1" value="{{ v }}">
+               {% endfor %}
+               <button class="btn btn-primary mt-2" name="save_global" value="1">{{ __('Kaydet', 'inventoryquality') }}</button>
+            </form>
+            <div class="form-text mt-2">{{ __('Önce pilot kapsamda çalışın; çalışma süresi ve veritabanı etkisi ölçülmeden kapasite garantisi verilmez.', 'inventoryquality') }}</div>
+         </div>
+      </div>
+   </div>
+</div>

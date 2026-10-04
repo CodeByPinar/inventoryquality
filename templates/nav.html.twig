@@ -1,0 +1,9 @@
+{# Eklenti ekranlarının üst gezinmesi #}
+<div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+   <h2 class="me-3 mb-0"><i class="ti ti-checklist me-1"></i>{{ __('Envanter Veri Kalitesi', 'inventoryquality') }}</h2>
+   {% for key, item in nav %}
+      <a href="{{ item.url }}" class="btn btn-sm {{ key == active ? 'btn-primary' : 'btn-outline-secondary' }}">
+         <i class="{{ item.icon }} me-1"></i>{{ item.label }}
+      </a>
+   {% endfor %}
+</div>
