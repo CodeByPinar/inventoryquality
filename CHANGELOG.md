@@ -2,6 +2,19 @@
 
 Tüm önemli değişiklikler bu dosyada tutulur. Sürümleme [SemVer](https://semver.org/lang/tr/) tabanlıdır.
 
+## [0.2.1] — 2026-10-04 — Ekran düzeltmeleri (gerçek kurulumdaki demo ekran görüntülerinden)
+
+### Düzeltildi
+- **Bulgular ve Kurallar listeleri** yalnız kimlik + birim sütunlarıyla açılıyordu (GLPI yeni tipte varsayılan sütun
+  tanımlamaz): kurulum / güncelleme artık varsayılan sütunları ekler (varlık, kural kodu, kural, durum, önem, sorumlu
+  grup, hedef tarih, son kontrol · kod, şablon, varlık tipi, etkin, askı nedeni, son değişiklik). Yöneticinin
+  düzenlediği sütunlara dokunulmaz.
+- **Varlık sekmesi:** teyit kuralının mevcut durumu iç anahtarla (`attest:…`) görünüyordu → okunur etiket; tarihler
+  GLPI biçiminde; sonuçlar rozetle; teyit düğmesi dar ekranda taşmıyor.
+- **Düzeltme sayfası:** onaylayan bulunamadığı için "İnceleme gerekli" olan öneride onay tablosu yanlışlıkla
+  "bu kuralda onay adımı yok" diyordu → "uygun onaylayan bulunamadı; yeniden atayın ya da iptal edin".
+- Kural kodları ve varlık adları listelerde satır kırmıyor.
+
 ## [0.2.0] — 2026-10-04 — İlk sürümün tamamlanması (tasarım aşama 3)
 
 ### Eklendi

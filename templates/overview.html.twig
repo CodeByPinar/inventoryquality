@@ -75,7 +75,7 @@
                <tbody>
                {% for r in by_rule %}
                   <tr>
-                     <td><a href="{{ base }}/rule.form.php?id={{ r.rule.id }}">{{ r.rule.code }}</a></td>
+                     <td class="text-nowrap"><a href="{{ base }}/rule.form.php?id={{ r.rule.id }}">{{ r.rule.code }}</a></td>
                      <td>{{ r.rule.name }}</td>
                      <td>v{{ r.version }}</td>
                      <td class="text-end">{{ r.score_txt }}</td>

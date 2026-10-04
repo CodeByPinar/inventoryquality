@@ -38,13 +38,19 @@ class AssetTab extends CommonGLPI
         $findings = [];
         foreach ($DB->request(['FROM' => Finding::getTable(), 'WHERE' => ['itemtype' => $type, 'items_id' => $id], 'ORDER' => ['status', 'id DESC']]) as $f) {
             $rule = Db::row(Rule::getTable(), ['id' => (int) $f['rules_id']]) ?? [];
-            $findings[] = ['f' => $f, 'rule' => $rule, 'badge' => Finding::statusBadge((string) $f['status']), 'observed' => Db::decode($f['detail'])['observed'] ?? []];
+            $obs = [];
+            foreach ((array) (Db::decode($f['detail'])['observed'] ?? []) as $k => $val) {
+                $obs[] = (Catalog::get($type, (string) $k)['label'] ?? $k) . ': ' . $val;
+            }
+            $findings[] = ['f' => $f, 'rule' => $rule, 'badge' => Finding::statusBadge((string) $f['status']), 'observed' => implode('; ', $obs),
+                'check' => Ui::dt($f['last_check']), 'due' => Ui::dt($f['due_date'])];
         }
         $evals = [];
         foreach (Evaluation::forItem($type, $id) as $rid => $e) {
             $rule = Db::row(Rule::getTable(), ['id' => $rid]) ?? ['code' => '?', 'name' => ''];
             $v = Rule::version((int) $e['ruleversions_id']);
-            $evals[] = ['e' => $e, 'rule' => $rule, 'version' => (int) ($v['version'] ?? 0), 'describe' => $v ? RuleTemplates::describe($v['def'], $type) : ''];
+            $evals[] = ['e' => $e, 'rule' => $rule, 'version' => (int) ($v['version'] ?? 0), 'describe' => $v ? RuleTemplates::describe($v['def'], $type) : '',
+                'badge' => Ui::resultBadge((string) $e['result']), 'date' => Ui::dt($e['evaluated_at'])];
         }
         $score = QualityCalculator::compute(['itemtype' => $type, 'items_id' => $id], [(int) $item->fields['entities_id']]);
         // İş sahibi teyidi (DQ-08): uygulanan teyit kuralları, son teyitler, teyit formu.
@@ -61,7 +67,7 @@ class AssetTab extends CommonGLPI
             'rules'  => array_map(static fn($ar) => ['code' => $ar['rule']['code'], 'days' => $ar['days'],
                 'labels' => implode(', ', array_map(static fn($k) => Catalog::get($type, $k)['label'] ?? $k, $ar['fields']))], $attRules),
             'fields' => array_map(static fn($k) => ['key' => $k, 'label' => Catalog::get($type, $k)['label'] ?? $k, 'value' => RuleEvaluator::summarize($vals[$k] ?? null)], array_keys($attFields)),
-            'recent' => array_map(static fn($a) => ['date' => (string) $a['date'], 'user' => getUserName((int) $a['users_id']),
+            'recent' => array_map(static fn($a) => ['date' => Ui::dt((string) $a['date']), 'user' => getUserName((int) $a['users_id']),
                 'fields' => implode(', ', array_map(static fn($k) => Catalog::get($type, $k)['label'] ?? $k, $a['fields_list'])), 'comment' => (string) $a['comment']],
                 AttestationService::recent($type, $id, 5)),
             'can'    => $attFields && AttestationService::canAttest($type, $id, (int) \Session::getLoginUserID()),

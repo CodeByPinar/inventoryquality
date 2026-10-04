@@ -66,7 +66,7 @@ class Rule extends CommonDBTM
             ['id' => 'common', 'name' => self::getTypeName(1)],
             ['id' => 1, 'table' => $t, 'field' => 'name', 'name' => __('Ad', 'inventoryquality'), 'datatype' => 'itemlink', 'massiveaction' => false],
             ['id' => 2, 'table' => $t, 'field' => 'id', 'name' => __('Kimlik', 'inventoryquality'), 'datatype' => 'number', 'massiveaction' => false],
-            ['id' => 3, 'table' => $t, 'field' => 'code', 'name' => __('Kod', 'inventoryquality'), 'datatype' => 'string', 'massiveaction' => false],
+            ['id' => 3, 'table' => $t, 'field' => 'code', 'name' => __('Kod', 'inventoryquality'), 'datatype' => 'specific', 'searchtype' => ['contains', 'notcontains', 'equals', 'notequals'], 'massiveaction' => false],
             ['id' => 4, 'table' => $t, 'field' => 'itemtype', 'name' => __('Varlık tipi', 'inventoryquality'), 'datatype' => 'specific', 'massiveaction' => false],
             ['id' => 5, 'table' => $t, 'field' => 'template', 'name' => __('Şablon', 'inventoryquality'), 'datatype' => 'specific', 'massiveaction' => false],
             ['id' => 6, 'table' => $t, 'field' => 'is_active', 'name' => __('Etkin', 'inventoryquality'), 'datatype' => 'bool', 'massiveaction' => false],
@@ -82,6 +82,9 @@ class Rule extends CommonDBTM
         $v = is_array($values) ? ($values[$field] ?? '') : $values;
         if ($field === 'itemtype') {
             return class_exists((string) $v) ? htmlescape($v::getTypeName(1)) : htmlescape((string) $v);
+        }
+        if ($field === 'code') {
+            return "<span class='text-nowrap'>" . htmlescape((string) $v) . '</span>';
         }
         if ($field === 'template') {
             return htmlescape(RuleTemplates::label((string) $v));

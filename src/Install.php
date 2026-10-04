@@ -327,7 +327,29 @@ final class Install
         Profile::install();
         Cron::register();
         Catalog::sync();
+        self::defaultDisplayPreferences();
         self::clearTemplateCache();
+    }
+
+    /**
+     * Listelerin varsayılan sütunları (GLPI yeni bir tip için yalnız kimlik + birim gösterir). Yalnız hiç genel tercih
+     * yoksa eklenir; yöneticinin düzenlediği sütunlara dokunulmaz.
+     */
+    public static function defaultDisplayPreferences(): void
+    {
+        global $DB;
+        $defaults = [
+            Finding::class => [2, 4, 5, 6, 7, 9, 11, 12],   // varlık, kural kodu, kural, durum, önem, sorumlu grup, hedef tarih, son kontrol
+            Rule::class    => [3, 5, 4, 6, 7, 19],          // kod, şablon, varlık tipi, etkin, askı nedeni, son değişiklik
+        ];
+        foreach ($defaults as $itemtype => $nums) {
+            if (countElementsInTable('glpi_displaypreferences', ['itemtype' => $itemtype, 'users_id' => 0]) > 0) {
+                continue;
+            }
+            foreach ($nums as $rank => $num) {
+                $DB->insert('glpi_displaypreferences', ['itemtype' => $itemtype, 'num' => $num, 'rank' => $rank + 1, 'users_id' => 0, 'interface' => 'central']);
+            }
+        }
     }
 
     /**
@@ -365,6 +387,7 @@ final class Install
         Config::uninstall();
         Profile::uninstall();
         Evidence::purgeAll();
+        $DB->delete('glpi_displaypreferences', ['itemtype' => [Finding::class, Rule::class]]);
         CronTask::unregister('inventoryquality');
     }
 }

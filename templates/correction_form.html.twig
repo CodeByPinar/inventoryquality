@@ -36,7 +36,9 @@
             <thead><tr><th>{{ __('Adım', 'inventoryquality') }}</th><th>{{ __('Onaylayan', 'inventoryquality') }}</th><th>{{ __('Karar türü', 'inventoryquality') }}</th><th>{{ __('Durum', 'inventoryquality') }}</th><th>{{ __('Karar veren', 'inventoryquality') }}</th><th>{{ __('Zaman', 'inventoryquality') }}</th><th>{{ __('Not', 'inventoryquality') }}</th></tr></thead>
             <tbody>
             {% for a in approvals %}<tr><td>{{ a.step }}</td><td>{{ a.target }}</td><td>{{ a.mode }}</td><td>{{ a.status }}</td><td>{{ a.by }}</td><td class="text-nowrap">{{ a.date }}</td><td>{{ a.comment }}</td></tr>
-            {% else %}<tr><td colspan="7" class="text-secondary">{{ __('Bu kuralda onay adımı yok (yetkili kişi doğrudan uygular).', 'inventoryquality') }}</td></tr>{% endfor %}
+            {% else %}<tr><td colspan="7" class="{{ policy_level == 'none' ? 'text-secondary' : 'text-danger' }}">{{ policy_level == 'none'
+               ? __('Bu kuralda onay adımı yok (yetkili kişi doğrudan uygular).', 'inventoryquality')
+               : __('Uygun onaylayan bulunamadı; onay satırı oluşturulmadı. Sağdan onaylayanı yeniden atayın ya da öneriyi iptal edin.', 'inventoryquality') }}</td></tr>{% endfor %}
             </tbody>
          </table>
       </div>

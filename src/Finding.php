@@ -109,7 +109,7 @@ class Finding extends CommonDBTM
             ['id' => 1, 'table' => $t, 'field' => 'id', 'name' => __('Bulgu', 'inventoryquality'), 'datatype' => 'itemlink', 'massiveaction' => false],
             ['id' => 2, 'table' => $t, 'field' => 'items_id', 'name' => __('Varlık', 'inventoryquality'), 'datatype' => 'specific', 'additionalfields' => ['itemtype'], 'nosearch' => true, 'massiveaction' => false],
             ['id' => 3, 'table' => $t, 'field' => 'itemtype', 'name' => __('Varlık tipi', 'inventoryquality'), 'datatype' => 'specific', 'searchtype' => ['equals', 'notequals'], 'massiveaction' => false],
-            ['id' => 4, 'table' => Rule::getTable(), 'field' => 'code', 'name' => __('Kural kodu', 'inventoryquality'), 'datatype' => 'string', 'linkfield' => 'rules_id', 'massiveaction' => false],
+            ['id' => 4, 'table' => Rule::getTable(), 'field' => 'code', 'name' => __('Kural kodu', 'inventoryquality'), 'datatype' => 'specific', 'searchtype' => ['contains', 'notcontains', 'equals', 'notequals'], 'linkfield' => 'rules_id', 'massiveaction' => false],
             ['id' => 5, 'table' => Rule::getTable(), 'field' => 'name', 'name' => __('Kural', 'inventoryquality'), 'datatype' => 'string', 'linkfield' => 'rules_id', 'massiveaction' => false],
             ['id' => 6, 'table' => $t, 'field' => 'status', 'name' => __('Durum', 'inventoryquality'), 'datatype' => 'specific', 'searchtype' => ['equals', 'notequals'], 'massiveaction' => false],
             ['id' => 7, 'table' => $t, 'field' => 'severity', 'name' => __('Önem', 'inventoryquality'), 'datatype' => 'specific', 'searchtype' => ['equals', 'notequals'], 'massiveaction' => false],
@@ -135,7 +135,7 @@ class Finding extends CommonDBTM
                 $it = is_array($values) ? (string) ($values['itemtype'] ?? '') : '';
                 if ($it !== '' && class_exists($it)) {
                     $label = AssetAdapter::label($it, (int) $v);
-                    return "<a href='" . htmlescape($it::getFormURLWithID((int) $v)) . "'>" . htmlescape($label) . '</a>';
+                    return "<a class='text-nowrap' href='" . htmlescape($it::getFormURLWithID((int) $v)) . "'>" . htmlescape($label) . '</a>';
                 }
                 return '#' . (int) $v;
             case 'itemtype':

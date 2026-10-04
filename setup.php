@@ -17,7 +17,7 @@ use GlpiPlugin\Inventoryquality\Menu;
 use GlpiPlugin\Inventoryquality\Profile;
 use GlpiPlugin\Inventoryquality\Rights;
 
-define('PLUGIN_INVENTORYQUALITY_VERSION', '0.2.0');
+define('PLUGIN_INVENTORYQUALITY_VERSION', '0.2.1');
 define('PLUGIN_INVENTORYQUALITY_MIN_GLPI', '11.0.0');
 define('PLUGIN_INVENTORYQUALITY_MAX_GLPI', '11.0.99');
 

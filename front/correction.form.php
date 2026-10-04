@@ -109,6 +109,7 @@ Ui::render('correction_form.html.twig', [
     'requester' => getUserName((int) $c['users_id']),
     'date'      => Ui::dt($c['date_creation']),
     'applied'   => Ui::dt($c['applied_at']),
+    'policy_level' => (string) ($policy['level'] ?? 'none'),
     'policy'    => RuleTemplates::approvalLabel($policy) . (!empty($policy['allow_self']) ? ' · ' . __('kendi talebini onaylama açık', 'inventoryquality') : ''),
     'steps'     => $steps,
     'approvals' => $approvals,
